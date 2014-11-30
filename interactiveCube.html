@@ -98,6 +98,7 @@
 
 				container.appendChild( renderer.domElement );
 
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false);
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
 				//
@@ -112,6 +113,28 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+				var vector = new THREE.Vector3();
+				vector.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+				vector.unproject( camera );
+
+				raycaster.ray.set( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( objects );
+
+				if ( intersects.length > 0 ) {
+
+					//intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
+
+					var particle = new THREE.Sprite( particleMaterial );
+					particle.position.copy( intersects[ 0 ].point );
+					particle.scale.x = particle.scale.y = 25;
+					scene.add( particle );
+
+				}
 
 			}
 
@@ -180,6 +203,8 @@
 				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
 				camera.lookAt( scene.position );
+
+
 
 				renderer.render( scene, camera );
 

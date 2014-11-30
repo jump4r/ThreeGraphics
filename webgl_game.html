@@ -24,9 +24,25 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
+			// Declare Start and End Cubes
+			var startCube = {
+				cube: null,
+				triggered: false
+			};
+
+			var endCube = {
+				cube: null,
+				triggered: false
+			};
+
+			// Variables for gravity & lose condition
+			var gravity = 0.5;
+
+			var info;
 			var objects = [];
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
+			var zOffset = -100;
 
 			var gameStart = false;
 			var gameOver = false;
@@ -38,15 +54,16 @@
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
-				/*
-				var info = document.createElement( 'div' );
+				
+				info = document.createElement( 'div' );
 				info.style.position = 'absolute';
-				info.style.top = '10px';
+				info.style.top = '12px';
+				info.style.padding = '20px';
 				info.style.width = '100%';
-				info.style.textAlign = 'center';
-				info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> webgl - interactive cubes';
+				info.style.textAlign = 'left';
+				info.innerHTML = 'Flow: Level 1';
 				container.appendChild( info );
-			*/
+			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 
 				//camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / 2, window.innerHeight/-2, -400, 400 );
@@ -59,24 +76,54 @@
 
 				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
 
+				// Initilaize Start Square
+				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
+				startCube.cube.position.x = 0;
+				startCube.cube.position.y = -60;
+				startCube.cube.position.z = zOffset;
+
+				startCube.cube.scale.x = 0.5;
+				startCube.cube.scale.y = 0.5;
+				startCube.cube.scale.z = 0.5;
+				scene.add(startCube.cube);
+
+				// Initialize End Square
+				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
+				endCube.cube.position.x = 0;
+				endCube.cube.position.y = 60;
+				endCube.cube.position.z = zOffset;
+
+				endCube.cube.scale.x = 0.5;
+				endCube.cube.scale.y = 0.5;
+				endCube.cube.scale.z = 0.5;
+				scene.add(endCube.cube);
+
 				for ( var i = 0; i < 1; i ++ ) {
 
 					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					object.position.x = Math.random() * 800 - 400;
-					object.position.y = Math.random() * 800 - 400;
+					object.position.x = 0;
+					object.position.y =0;
 					object.position.z = -100; // Math.random() * 800 - 400;
 
-					object.rotation.x = Math.random() * 2 * Math.PI;
-					object.rotation.y = Math.random() * 2 * Math.PI;
-					object.rotation.z = Math.random() * 2 * Math.PI;
+					//object.rotation.x = Math.random() * 2 * Math.PI;
+					//object.rotation.y = Math.random() * 2 * Math.PI;
+					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.scale.x = Math.random() + 0.5;
-					object.scale.y = Math.random() + 0.5;
+					object.scale.x = Math.random() + 0.1;
+					object.scale.y = Math.random() + 4.5;
 					object.scale.z = Math.random() + 0.5;
 
-					scene.add( object );
-					objects.push( object );
+					var gameCube = {
+						cube: object,
+						index: i,
+						direction: 1
+					};
+
+					//console.log("Objects index is " + gameCube.index);
+					scene.add( gameCube.cube );
+					objects.push( gameCube );
+					console.log("Objects' index is " + objects[i].index)
 
 				}
 				console.log("Number of objects saved in scene: " + objects.length);
@@ -89,7 +136,7 @@
 				renderer.sortObjects = false;
 				container.appendChild(renderer.domElement);
 
-				// document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
 				//
@@ -109,8 +156,10 @@
 
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
+				info.innerHTML = 'Flow: Level 1 - In Progress';
 				gameStart = true;
 			}
+
 			function onDocumentMouseMove( event ) {
 
 				event.preventDefault();
@@ -129,31 +178,34 @@
 				var intersects = raycaster.intersectObjects( scene.children );
 
 				if ( intersects.length > 0 ) {
-
 					if ( INTERSECTED != intersects[ 0 ].object ) {
-
 						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-
-						console.log("Valid, game continues");
+						console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
 						//console.log("Object x-position: " + intersects[0].object.position.x);
 						INTERSECTED = intersects[ 0 ].object;
+						for (var i = 0; i < objects.length; i++) {
+							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
+								info.innerHTML = 'Flow: Level 1 - Cleared'
+							}
+						}
 						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
 						INTERSECTED.material.emissive.setHex( 0xff0000 );
-
 					}
-
 				} 
-
 				else {
-					//console.log("Not valid, game ends");
+					// If the player is off the court, the game ends.
+					if (gameStart) {
+						console.log("Not valid, game ends");
+						gameOver = true;
+						info.innerHTML = "Flow: Level 1 - Failed";
+					}		
 					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-
 					INTERSECTED = null;
-
 				}
 			}
 
-			function moveObjects() {
+			// Checks the frustrum of the camera to tell if the object is in the scene view or not.
+			function checkObjectInFOV() {
 				// Update Camera matrix
 				camera.updateMatrix();
 				camera.updateMatrixWorld();
@@ -166,41 +218,62 @@
 
 				// For each object, move based off it its position in the frustum
 				for ( var i = 0; i < objects.length; i++) {
-					var pos = objects[i].position.x;
-					objects[i].position.x += 1;
-					objects[i].updateMatrix();
-					objects[i].updateMatrixWorld();
+					//var pos = objects[i].cube.position.x;
+					moveObject(objects[i].cube);
+					objects[i].cube.position.x += 1;
+					objects[i].cube.updateMatrix();
+					objects[i].cube.updateMatrixWorld();
 
-					if (!frustum.containsPoint(objects[i].position)) {
-						console.log("Object out of range of frustum!");
+					// Reverse Object Position if out of position.
+					if (!frustum.containsPoint(objects[i].cube.position)) {
+						console.log("Object " + objects[i].index + " is out of position." );
 					}
 				}
 			}
 
-			function animate() {
+			function moveObject( object ) {
+				object.position.x += 1;
+			}
 
+			function dropObject( object ) {
+				console.log('dropping object');
+				object.position.y -= gravity;
+				gravity += 0.02;
+			}
+
+			function rotateObjects() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].cube.rotation.x -= .02;
+					//objects[i].cube.rotation.z += .01;
+				}
+			}
+
+			function animate() {
 				requestAnimationFrame( animate );
-				moveObjects();
+				//checkObjectInFOV();
+				rotateObjects();
+
+				// Lose Condition, drop the objects if the player loses and make them reload the game.
+				if (gameOver) {
+					for (var i = 0; i < objects.length; i++ ) {
+						dropObject(objects[i].cube);
+					}
+					dropObject(startCube.cube);
+					dropObject(endCube.cube);
+				}
 				render();
 			}
 
 			function render() {
-
 				theta += 0.1;
 
 				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
 				camera.lookAt( scene.position );
-
-
 				raycastFromMouse();
-
 				renderer.render( scene, camera );
-
 			}
-
 		</script>
-
 	</body>
 </html>
