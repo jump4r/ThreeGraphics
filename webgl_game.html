@@ -27,18 +27,24 @@
 			// Declare Start and End Cubes
 			var startCube = {
 				cube: null,
-				triggered: false
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
 			};
 
 			var endCube = {
 				cube: null,
-				triggered: false
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
 			};
 
 			// Variables for gravity & lose condition
-			var gravity = 0.5;
+			var gravityAcceleration = 0.02;
 
 			var info;
+			var fontsize = 5;
+
 			var objects = [];
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
@@ -50,6 +56,7 @@
 			init();
 			animate();
 
+			// Initial.
 			function init() {
 
 				container = document.createElement( 'div' );
@@ -61,7 +68,8 @@
 				info.style.padding = '20px';
 				info.style.width = '100%';
 				info.style.textAlign = 'left';
-				info.innerHTML = 'Flow: Level 1';
+				info.style.color = 'white';
+				info.innerHTML = 'Flow: Level 1'.fontsize(fontsize);
 				container.appendChild( info );
 			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -74,6 +82,29 @@
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
 
+				loadLevel();
+				console.log("Number of objects saved in scene: " + objects.length);
+
+				raycaster = new THREE.Raycaster();
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setClearColorHex(0x222222, 1);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.sortObjects = false;
+				container.appendChild(renderer.domElement);
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			// Adds level objects to scene // This function will most likely change from every js file.
+			function loadLevel() {
 				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
 
 				// Initilaize Start Square
@@ -117,7 +148,9 @@
 					var gameCube = {
 						cube: object,
 						index: i,
-						direction: 1
+						direction: 1,
+						initialXFall: Math.random() * 2 - 1,
+						initialYFall: Math.random() * 2 - 1
 					};
 
 					//console.log("Objects index is " + gameCube.index);
@@ -126,25 +159,9 @@
 					console.log("Objects' index is " + objects[i].index)
 
 				}
-				console.log("Number of objects saved in scene: " + objects.length);
-
-				raycaster = new THREE.Raycaster();
-
-				renderer = new THREE.WebGLRenderer();
-				renderer.setClearColor( 0xf0f0f0 );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.sortObjects = false;
-				container.appendChild(renderer.domElement);
-
-				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
 			}
 
+			// Window manager for Window Resizing.
 			function onWindowResize() {
 
 				//camera.aspect = window.innerWidth / window.innerHeight;
@@ -154,12 +171,14 @@
 
 			}
 
+			// Event Manager for Mouse-Down
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
-				info.innerHTML = 'Flow: Level 1 - In Progress';
+				info.innerHTML = 'Flow: Level 1 - In Progress'.fontsize(fontsize);;
 				gameStart = true;
 			}
 
+			// Event Manager for Mouse-Move
 			function onDocumentMouseMove( event ) {
 
 				event.preventDefault();
@@ -185,7 +204,7 @@
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Flow: Level 1 - Cleared'
+								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
 							}
 						}
 						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
@@ -197,7 +216,7 @@
 					if (gameStart) {
 						console.log("Not valid, game ends");
 						gameOver = true;
-						info.innerHTML = "Flow: Level 1 - Failed";
+						info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
 					}		
 					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = null;
@@ -231,16 +250,24 @@
 				}
 			}
 
+			// Move Object (Left-Right position for right now)
 			function moveObject( object ) {
 				object.position.x += 1;
 			}
 
+			// Drop all objects (lose condition).
 			function dropObject( object ) {
 				console.log('dropping object');
-				object.position.y -= gravity;
-				gravity += 0.02;
+
+				// Drop Object with a gravity acceleration
+				object.cube.position.y += object.initialYFall;
+				object.initialYFall -= gravityAcceleration;
+
+				// Explode Object Left or right if its initial x-vel is 0, otheriwise, drop it like an ugly baby.
+				object.cube.position.x += object.initialXFall;
 			}
 
+			// Rotate Objects (Around X axis, if RotateY is needed it'll be created).
 			function rotateObjects() {
 				for (var i = 0; i < objects.length; i++) {
 					objects[i].cube.rotation.x -= .02;
@@ -248,6 +275,7 @@
 				}
 			}
 
+			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
@@ -256,14 +284,15 @@
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
 					for (var i = 0; i < objects.length; i++ ) {
-						dropObject(objects[i].cube);
+						dropObject(objects[i]);
 					}
-					dropObject(startCube.cube);
-					dropObject(endCube.cube);
+					dropObject(startCube);
+					dropObject(endCube);
 				}
 				render();
 			}
 
+			// Render objects to the scene.
 			function render() {
 				theta += 0.1;
 
