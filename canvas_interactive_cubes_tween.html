@@ -15,8 +15,8 @@
 	</head>
 	<body>
 
-		<script src="../build/three.min.js"></script>
-        
+		<script src="three.min.js"></script>
+
 
 
 		<script src="js/loaders/VTKLoader.js"></script>
@@ -97,7 +97,7 @@
 
 
 				var loader = new THREE.ImageLoader( manager );
-				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
+				loader.load( 'textures/brick_bump.jpg', function ( image ) {
 
 					texture.image = image;
 					texture.needsUpdate = true;
@@ -105,7 +105,7 @@
 				} );
                 
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/male02/male02.obj', function ( object ) {
+				loader.load( 'obj/male02/ship.obj', function ( object ) {
 
 					object.traverse( function ( child ) {
 
@@ -117,7 +117,10 @@
 
 					} );
 
-					object.position.y = - 80;
+					object.position.z =  80;
+                    object.scale.x = 20;
+                    object.scale.y = 20;
+                    object.scale.z = 20;
 					scene.add( object );
 
 				}, onProgress, onError );
