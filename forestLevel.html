@@ -18,13 +18,11 @@
 
 		<script src="js/build/three.min.js"></script>
 		<script src="js/Frustum.js"></script>
+
         <script src="js/loaders/OBJLoader.js"></script>
+        <script src="js/renderers/CanvasRenderer.js"></script>
 
 		<script src="js/renderers/Projector.js"></script>
-		<script src="js/renderers/CanvasRenderer.js"></script>
-
-		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/tween.min.js"></script>
 
 		<script>
 
@@ -88,7 +86,64 @@
 				var light = new THREE.DirectionalLight( 0xffffff, 1 );
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
-               
+                //obj
+
+                // texture
+
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+
+					console.log( item, loaded, total );
+
+				};
+
+				var texture = new THREE.Texture();
+
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+
+				var onError = function ( xhr ) {
+				};
+
+
+				var loader = new THREE.ImageLoader( manager );
+				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
+
+					texture.image = image;
+					texture.needsUpdate = true;
+
+				} );
+
+				// model
+
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+
+					object.position.y = object.position.x = 0;
+					object.position.z = zOffset + 5;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					scene.add( object );
+
+				}, onProgress, onError );
+
+				//
+
+                
+                //end obj
 				loadLevel();
 				console.log("Number of objects saved in scene: " + objects.length);
 
