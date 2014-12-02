@@ -86,6 +86,10 @@
 				var light = new THREE.DirectionalLight( 0xffffff, 1 );
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
+                //skybox
+                
+                
+    
                 //obj
 
                 // texture
@@ -96,7 +100,7 @@
 					console.log( item, loaded, total );
 
 				};
-
+                
 				var texture = new THREE.Texture();
 
 				var onProgress = function ( xhr ) {
@@ -117,6 +121,11 @@
 					texture.needsUpdate = true;
 
 				} );
+                
+                var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
+                var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+                var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+                scene.add(skyBox);
 
 				// model
 				var loader = new THREE.OBJLoader( manager );
