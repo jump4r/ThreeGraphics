@@ -111,7 +111,7 @@
 
 
 				var loader = new THREE.ImageLoader( manager );
-				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
+				loader.load( 'textures/new.jpg', function ( image ) {
 
 					texture.image = image;
 					texture.needsUpdate = true;
@@ -119,7 +119,6 @@
 				} );
 
 				// model
-
 				var loader = new THREE.OBJLoader( manager );
 				loader.load( 'obj/tree/tree.obj', function ( object ) {
 
@@ -132,14 +131,177 @@
 						}
 
 					} );
-
-					object.position.y = object.position.x = 0;
-					object.position.z = zOffset + 5;
+var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
 					object.scale.x = object.scale.y = object.scale.z = 20;
-					scene.add( object );
-
+					this.scene.add( object );
+                    
 				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
 
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+
+var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+
+					var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+                    var test = Math.random()*140;
+                    var test2 = Math.random()*10;
+                    if(test2 > 5){
+                        test *=-1;
+                    }
+                    object.position.x = test;
+                    var test3 = Math.random()*50;
+                    var test4 = Math.random()*10;
+                    if(test4 > 5){
+                        test3 *=-1;
+                    }
+					object.position.y = test3;
+                    object.rotation.x = 90;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -90;
+					object.scale.x = object.scale.y = object.scale.z = 20;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
 				//
 
                 
@@ -171,7 +333,7 @@
 
 				// Initilaize Start Square
 				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
-				startCube.cube.position.x = 0;
+				startCube.cube.position.x = 140;
 				startCube.cube.position.y = -60;
 				startCube.cube.position.z = zOffset;
 
@@ -182,7 +344,7 @@
 
 				// Initialize End Square
 				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
-				endCube.cube.position.x = 0;
+				endCube.cube.position.x = -140;
 				endCube.cube.position.y = 60;
 				endCube.cube.position.z = zOffset;
 
@@ -191,21 +353,27 @@
 				endCube.cube.scale.z = 0.5;
 				scene.add(endCube.cube);
 
-				for ( var i = 0; i < 1; i ++ ) {
+				for ( var i = 0; i < 3; i ++ ) {
 
 					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					object.position.x = 0;
+					object.position.x = -73+i*137;
+                    if(i == 2){
+                    object.position.x = 0;
+                    }
 					object.position.y =0;
-					object.position.z = -100; // Math.random() * 800 - 400;
+                    if(i == 2){
+                    object.position.y = -40;
+                    }
+					object.position.z = -70; // Math.random() * 800 - 400;
 
 					//object.rotation.x = Math.random() * 2 * Math.PI;
 					//object.rotation.y = Math.random() * 2 * Math.PI;
 					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.scale.x = Math.random() + 0.1;
-					object.scale.y = Math.random() + 4.5;
-					object.scale.z = Math.random() + 0.5;
+					object.scale.x = 0.35;
+					object.scale.y = 4.5;
+					object.scale.z = 0.2;
 
 					var gameCube = {
 						cube: object,
@@ -222,7 +390,7 @@
 
 				}
 			}
-
+                    
 			// Window manager for Window Resizing.
 			function onWindowResize() {
 
@@ -332,8 +500,8 @@
 			// Rotate Objects (Around X axis, if RotateY is needed it'll be created).
 			function rotateObjects() {
 				for (var i = 0; i < objects.length; i++) {
-					objects[i].cube.rotation.x -= .02;
-					//objects[i].cube.rotation.z += .01;
+					//objects[i].cube.rotation.x -= .02;
+					objects[i].cube.rotation.z += .01;
 				}
 			}
 
