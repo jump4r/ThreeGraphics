@@ -18,14 +18,7 @@
 
 		<script src="js/build/three.min.js"></script>
 		<script src="js/Frustum.js"></script>
-        <script src="js/loaders/OBJLoader.js"></script>
-
-		<script src="js/renderers/Projector.js"></script>
-		<script src="js/renderers/CanvasRenderer.js"></script>
-
-		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/tween.min.js"></script>
-
+       
 		<script>
 
 			var container, stats;
@@ -45,6 +38,8 @@
 				initialXFall: Math.random() * 2 - 1,
 				initialYFall: Math.random() * 2 - 1
 			};
+
+			var outlineMesh, outlineTarget;
 
 			// Variables for gravity & lose condition
 			var gravityAcceleration = 0.02;
@@ -136,6 +131,12 @@
 				endCube.cube.scale.z = 0.5;
 				scene.add(endCube.cube);
 
+				// Initialize Outline Geometry
+				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
+			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
+			    outlineMesh.position.x = outlineMesh.position.y = 50;
+			    scene.add(outlineMesh);
+
 				for ( var i = 0; i < 1; i ++ ) {
 
 					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
@@ -155,6 +156,7 @@
 					var gameCube = {
 						cube: object,
 						index: i,
+						triggered: true,
 						direction: 1,
 						initialXFall: Math.random() * 2 - 1,
 						initialYFall: Math.random() * 2 - 1
@@ -205,8 +207,9 @@
 
 				if ( intersects.length > 0 ) {
 					if ( INTERSECTED != intersects[ 0 ].object ) {
-						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
-						console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) 	
+							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+						//console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
 						//console.log("Object x-position: " + intersects[0].object.position.x);
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
@@ -214,8 +217,11 @@
 								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
 							}
 						}
-						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex( 0xff0000 );
+						
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) {
+							INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+							INTERSECTED.material.emissive.setHex( 0x777777 );
+						}
 					}
 				} 
 				else {
@@ -225,8 +231,20 @@
 						gameOver = true;
 						info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
 					}		
-					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
+						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = null;
+				}
+			}
+
+			function outlineObject() {
+				for (var i = 0; i < objects.length; i++) {
+					if (objects[i].triggered) {
+						outlineMesh.position.copy(objects[i].cube.position);
+						outlineMesh.rotation.copy(objects[i].cube.rotation);
+						outlineMesh.scale.copy(objects[i].cube.scale);
+						outlineMesh.scale.multiplyScalar(1.05);
+					}
 				}
 			}
 
@@ -264,7 +282,7 @@
 
 			// Drop all objects (lose condition).
 			function dropObject( object ) {
-				console.log('dropping object');
+				//console.log('dropping object');
 
 				// Drop Object with a gravity acceleration
 				object.cube.position.y += object.initialYFall;
@@ -287,6 +305,7 @@
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
 				rotateObjects();
+				outlineObject();
 
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
