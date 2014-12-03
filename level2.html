@@ -73,7 +73,7 @@
 				info.style.width = '100%';
 				info.style.textAlign = 'left';
 				info.style.color = 'white';
-				info.innerHTML = 'Flow: Level 1'.fontsize(fontsize);
+				info.innerHTML = 'Track: Level 2'.fontsize(fontsize);
 				container.appendChild( info );
 			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -100,16 +100,14 @@
 
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
-				//
-
 				window.addEventListener( 'resize', onWindowResize, false );
 
 			}
 
 			// Adds level objects to scene // This function will most likely change from every js file.
 			function loadLevel() {
-				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
+				var geometry = new THREE.BoxGeometry( 25, 25, 25);
+				var levelSide = [-1, 1];
 
 				// Initilaize Start Square
 				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
@@ -128,9 +126,7 @@
 				endCube.cube.position.y = 60;
 				endCube.cube.position.z = zOffset;
 
-				endCube.cube.scale.x = 0.5;
-				endCube.cube.scale.y = 0.5;
-				endCube.cube.scale.z = 0.5;
+				endCube.cube.scale.x = endCube.cube.scale.y  = endCube.cube.scale.z =  0.75;
 				scene.add(endCube.cube);
 
 				// Initialize Outline Geometry
@@ -139,27 +135,27 @@
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
 			    scene.add(outlineMesh);
 
-				for ( var i = 0; i < 1; i ++ ) {
+				for ( var i = 0; i < 6; i ++ ) {
 
 					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					object.position.x = 0;
-					object.position.y =0;
+					object.position.x = 100 * levelSide[i % levelSide.length];
+					object.position.y = -60 + ( i * 25 );
 					object.position.z = -100; // Math.random() * 800 - 400;
 
 					//object.rotation.x = Math.random() * 2 * Math.PI;
 					//object.rotation.y = Math.random() * 2 * Math.PI;
 					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.scale.x = Math.random() + 0.1;
-					object.scale.y = Math.random() + 4.5;
-					object.scale.z = Math.random() + 0.5;
+					object.scale.x = 1;
+					object.scale.y = 1;
+					object.scale.z = 1;
 
 					var gameCube = {
 						cube: object,
 						index: i,
 						triggered: false,
-						direction: 1,
+						direction: Math.random() < 0.5 ? 1 : -1,
 						initialXFall: Math.random() * 2 - 1,
 						initialYFall: Math.random() * 2 - 1
 					};
@@ -185,7 +181,7 @@
 			// Event Manager for Mouse-Down
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
-				info.innerHTML = 'Flow: Level 1 - In Progress'.fontsize(fontsize);;
+				info.innerHTML = 'Track: Level 2 - In Progress'.fontsize(fontsize);;
 				gameStart = true;
 			}
 
@@ -217,7 +213,7 @@
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
+								info.innerHTML = 'Track: Level 2 - Cleared'.fontsize(fontsize);
 								levelCleared();
 							}
 
@@ -238,7 +234,7 @@
 					if (gameStart) {
 						console.log("Not valid, game ends");
 						gameOver = true;
-						info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
+						info.innerHTML = "Track: Level 2 - Failed".fontsize(fontsize);
 					}		
 					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
 						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
@@ -281,7 +277,7 @@
 				// For each object, move based off it its position in the frustum
 				for ( var i = 0; i < objects.length; i++) {
 					//var pos = objects[i].cube.position.x;
-					moveObject(objects[i].cube);
+					moveObject(objects[i]);
 					objects[i].cube.position.x += 1;
 					objects[i].cube.updateMatrix();
 					objects[i].cube.updateMatrixWorld();
@@ -289,13 +285,25 @@
 					// Reverse Object Position if out of position.
 					if (!frustum.containsPoint(objects[i].cube.position)) {
 						console.log("Object " + objects[i].index + " is out of position." );
+						objects[i].direction = objects[i].direction * -1;
+
+						// Protect against slight glitches thorugh the frustrum.
+						if (objects[i].direction < 0)
+							objects[i].cube.position.x -= 2.0;
+						else
+							objects[i].cube.position.x += 1.0;
 					}
 				}
 			}
 
 			// Move Object (Left-Right position for right now)
 			function moveObject( object ) {
-				object.position.x += 1;
+				// I'm not totally sure why moving objects in the x-position returns different speeds based off of positive and negative, but it really makes me madd #NodejsmorelikeNOjs
+				if (object.direction < 0)
+					object.cube.position.x += -2.5;
+
+				if (object.direction > 0)
+					object.cube.position.x += 1;
 			}
 
 			// Drop all objects (lose condition).
@@ -334,8 +342,8 @@
 			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
-				//checkObjectInFOV();
-				rotateObjects();
+				checkObjectInFOV();
+				//rotateObjects();
 				outlineObject();
 
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
