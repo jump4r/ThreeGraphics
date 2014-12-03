@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>WebGL Game</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="js/build/three.min.js"></script>
+		<script src="js/Frustum.js"></script>
+       
+		<script>
+
+			var container, stats;
+			var camera, scene, raycaster, renderer;
+
+			var scaleStep = 0.05;
+			var scaleMax = 3;
+			var scaleMin = 0.5;
+
+			// Declare Start and End Cubes
+			var startCube = {
+				cube: null,
+				index: -1,
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
+			};
+
+			var endCube = {
+				cube: null,
+				index: -2,
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
+			};
+
+			var outlineMesh, outlineTarget;
+
+			// Variables for gravity & lose condition
+			var gravityAcceleration = 0.02;
+
+			var info;
+			var fontsize = 5;
+
+			var objects = [];
+			var mouse = new THREE.Vector2(), INTERSECTED;
+			var radius = 100, theta = 0;
+			var zOffset = -100;
+
+			var gameStart = false;
+			var gameOver = false;
+
+			init();
+			animate();
+
+			// Initial.
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				
+				info = document.createElement( 'div' );
+				info.style.position = 'absolute';
+				info.style.top = '12px';
+				info.style.padding = '20px';
+				info.style.width = '100%';
+				info.style.textAlign = 'left';
+				info.style.color = 'white';
+				info.innerHTML = 'Scale: Level 3'.fontsize(fontsize);
+				container.appendChild( info );
+			
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+
+				//camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / 2, window.innerHeight/-2, -400, 400 );
+
+				scene = new THREE.Scene();
+
+				var light = new THREE.DirectionalLight( 0xffffff, 1 );
+				light.position.set( 1, 1, 1 ).normalize();
+				scene.add( light );
+               
+				loadLevel();
+				console.log("Number of objects saved in scene: " + objects.length);
+
+				raycaster = new THREE.Raycaster();
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setClearColorHex(0x222222, 1);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.sortObjects = false;
+				container.appendChild(renderer.domElement);
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			// Adds level objects to scene // This function will most likely change from every js file.
+			function loadLevel() {
+				var geometry = new THREE.BoxGeometry( 15, 15, 15);
+				var levelSide = [-1, 1];
+
+				// Initilaize Start Square
+				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
+				startCube.cube.position.x = 0;
+				startCube.cube.position.y = -60;
+				startCube.cube.position.z = zOffset;
+
+				startCube.cube.scale.x = 0.5;
+				startCube.cube.scale.y = 0.5;
+				startCube.cube.scale.z = 0.5;
+				scene.add(startCube.cube);
+
+				// Initialize End Square
+				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
+				endCube.cube.position.x = 0;
+				endCube.cube.position.y = 60;
+				endCube.cube.position.z = zOffset;
+
+				endCube.cube.scale.x = endCube.cube.scale.y  = endCube.cube.scale.z =  0.75;
+				scene.add(endCube.cube);
+
+				// Initialize Outline Geometry
+				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
+			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
+			    outlineMesh.position.x = outlineMesh.position.y = 100;
+			    scene.add(outlineMesh);
+
+				for ( var i = 0; i < 14; i ++ ) {
+
+					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+
+					object.position.x = Math.random() * 150 - 75;
+					object.position.y = Math.random() * 150 - 75;
+					object.position.z = Math.random() * 10 + zOffset;
+
+					object.rotation.x = Math.random() * 2 * Math.PI;
+					object.rotation.y = Math.random() * 2 * Math.PI;
+					object.rotation.z = Math.random() * 2 * Math.PI;
+
+					var objectRandomScale = Math.random() * 0.5 + 0.5;
+					object.scale.x = object.scale.y = object.scale.z = objectRandomScale;
+
+					var gameCube = {
+						cube: object,
+						index: i,
+						scaleDir: 1,
+						triggered: false,
+						direction: Math.random() < 0.5 ? 1 : -1,
+						initialXFall: Math.random() * 2 - 1,
+						initialYFall: Math.random() * 2 - 1
+					};
+
+					//console.log("Objects index is " + gameCube.index);
+					scene.add( gameCube.cube );
+					objects.push( gameCube );
+					//console.log("Objects' index is " + objects[i].index);
+
+				}
+			}
+
+			// Window manager for Window Resizing.
+			function onWindowResize() {
+
+				//camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			// Event Manager for Mouse-Down
+			function onDocumentMouseDown( event ) {
+				console.log("Game Started!");
+				info.innerHTML = 'Scale: Level 3 - In Progress'.fontsize(fontsize);;
+				gameStart = true;
+			}
+
+			// Event Manager for Mouse-Move
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+
+			// Raycast to check and see if object is  valid
+			function raycastFromMouse() {
+				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+
+				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( scene.children );
+
+				if ( intersects.length > 0 ) {
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) 	
+							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+						//console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
+						//console.log("Object x-position: " + intersects[0].object.position.x);
+						resetOutline();
+						INTERSECTED = intersects[ 0 ].object;
+						for (var i = 0; i < objects.length; i++) {
+							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
+								info.innerHTML = 'Scale: Level 3 - Cleared'.fontsize(fontsize);
+								levelCleared();
+							}
+
+							if (objects[i].cube.position.y == INTERSECTED.position.y && gameStart) {
+								console.log('Trigger object ' + objects[i].index);
+								objects[i].triggered = true;
+							}
+						}
+
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) {
+							INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+							INTERSECTED.material.emissive.setHex( 0x777777 );
+						}
+					}
+				} 
+				else {
+					// If the player is off the court, the game ends.
+					if (gameStart) {
+						console.log("Not valid, game ends");
+						gameOver = true;
+						info.innerHTML = "Scale: Level 3 - Failed".fontsize(fontsize);
+					}		
+					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
+						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					INTERSECTED = null;
+				}
+			}
+
+			function outlineObject() {
+				for (var i = 0; i < objects.length; i++) {
+					if (objects[i].triggered) {
+						console.log('Object triggered: ' + objects[i].index);
+						outlineMesh.position.copy(objects[i].cube.position);
+						outlineMesh.rotation.copy(objects[i].cube.rotation);
+						outlineMesh.scale.copy(objects[i].cube.scale);
+						outlineMesh.scale.multiplyScalar(1.05);
+					}
+				}
+			}
+
+			function resetOutline() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+					outlineMesh.position.x = outlineMesh.position.y = outlineMesh.position.z = -99;
+					outlineMesh.scale.x = outlineMesh.scale.y = outlineMesh.scale.z = .5;
+				}
+			}
+
+			// Checks the frustrum of the camera to tell if the object is in the scene view or not.
+			function checkObjectInFOV() {
+				// Update Camera matrix
+				camera.updateMatrix();
+				camera.updateMatrixWorld();
+				camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+				// Check to see whether objects need to turned
+				// Make new Frustrum
+				var frustum = new THREE.Frustum();
+				frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ) );
+
+				// For each object, move based off it its position in the frustum
+				for ( var i = 0; i < objects.length; i++) {
+					//var pos = objects[i].cube.position.x;
+					moveObject(objects[i]);
+					objects[i].cube.position.x += 1;
+					objects[i].cube.updateMatrix();
+					objects[i].cube.updateMatrixWorld();
+
+					// Reverse Object Position if out of position.
+					if (!frustum.containsPoint(objects[i].cube.position)) {
+						console.log("Object " + objects[i].index + " is out of position." );
+						objects[i].direction = objects[i].direction * -1;
+
+						// Protect against slight glitches thorugh the frustrum.
+						if (objects[i].direction < 0)
+							objects[i].cube.position.x -= 2.0;
+						else
+							objects[i].cube.position.x += 1.0;
+					}
+				}
+			}
+
+			// Move Object (Left-Right position for right now)
+			function moveObject( object ) {
+				// I'm not totally sure why moving objects in the x-position returns different speeds based off of positive and negative, but it really makes me madd #NodejsmorelikeNOjs
+				if (object.direction < 0)
+					object.cube.position.x += -2.5;
+
+				if (object.direction > 0)
+					object.cube.position.x += 1;
+			}
+
+			// Drop all objects (lose condition).
+			function dropObject( object ) {
+				//console.log('dropping object');
+
+				// Drop Object with a gravity acceleration
+				object.cube.position.y += object.initialYFall;
+				object.initialYFall -= gravityAcceleration;
+
+				// Explode Object Left or right if its initial x-vel is 0, otheriwise, drop it like an ugly baby.
+				object.cube.position.x += object.initialXFall;
+			}
+
+			// Rotate Objects (Around X axis, if RotateY is needed it'll be created).
+			function rotateObjects() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].cube.rotation.x -= .02;
+					//objects[i].cube.rotation.z += .01;
+				}
+			}
+
+			// Function for scaling objects in the level
+			function scaleObjects() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].cube.scale.x += scaleStep * objects[i].scaleDir;
+					objects[i].cube.scale.y += scaleStep * objects[i].scaleDir;
+					objects[i].cube.scale.z += scaleStep * objects[i].scaleDir;
+					if (objects[i].cube.scale.x >= scaleMax) objects[i].scaleDir *= -1;
+					if (objects[i].cube.scale.x <= scaleMin) objects[i].scaleDir *= -1;
+				}
+
+			}
+
+			// Level failed, restart
+			function levelFailed() {
+				// Fail level condition
+			}
+
+			// Level Cleared, move to the next level 
+			function levelCleared() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+				}
+				// Move to the next level.
+			}
+
+			// Animate, Running 60 FPS at the moment.
+			function animate() {
+				requestAnimationFrame( animate );
+				//checkObjectInFOV();
+				//rotateObjects();
+				scaleObjects();
+				outlineObject();
+
+				// Lose Condition, drop the objects if the player loses and make them reload the game.
+				if (gameOver) {
+					for (var i = 0; i < objects.length; i++ ) {
+						dropObject(objects[i]);
+					}
+					dropObject(startCube);
+					dropObject(endCube);
+				}
+				render();
+			}
+
+			// Render objects to the scene.
+			function render() {
+				theta += 0.1;
+
+				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.lookAt( scene.position );
+				raycastFromMouse();
+				renderer.render( scene, camera );
+			}
+		</script>
+	</body>
+</html>
