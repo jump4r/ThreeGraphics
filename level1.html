@@ -27,6 +27,7 @@
 			// Declare Start and End Cubes
 			var startCube = {
 				cube: null,
+				index: -1,
 				triggered: false,
 				initialXFall: Math.random() * 2 - 1,
 				initialYFall: Math.random() * 2 - 1
@@ -34,6 +35,7 @@
 
 			var endCube = {
 				cube: null,
+				index: -2,
 				triggered: false,
 				initialXFall: Math.random() * 2 - 1,
 				initialYFall: Math.random() * 2 - 1
@@ -134,7 +136,7 @@
 				// Initialize Outline Geometry
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
 			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
-			    outlineMesh.position.x = outlineMesh.position.y = 50;
+			    outlineMesh.position.x = outlineMesh.position.y = 100;
 			    scene.add(outlineMesh);
 
 				for ( var i = 0; i < 1; i ++ ) {
@@ -156,7 +158,7 @@
 					var gameCube = {
 						cube: object,
 						index: i,
-						triggered: true,
+						triggered: false,
 						direction: 1,
 						initialXFall: Math.random() * 2 - 1,
 						initialYFall: Math.random() * 2 - 1
@@ -165,7 +167,7 @@
 					//console.log("Objects index is " + gameCube.index);
 					scene.add( gameCube.cube );
 					objects.push( gameCube );
-					console.log("Objects' index is " + objects[i].index)
+					//console.log("Objects' index is " + objects[i].index);
 
 				}
 			}
@@ -211,13 +213,20 @@
 							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 						//console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
 						//console.log("Object x-position: " + intersects[0].object.position.x);
+						resetOutline();
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
 								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
+								levelCleared();
+							}
+
+							if (objects[i].cube.position.y == INTERSECTED.position.y && gameStart) {
+								console.log('Trigger object ' + objects[i].index);
+								objects[i].triggered = true;
 							}
 						}
-						
+
 						if ( INTERSECTED && INTERSECTED.material.emissive != null ) {
 							INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
 							INTERSECTED.material.emissive.setHex( 0x777777 );
@@ -240,11 +249,20 @@
 			function outlineObject() {
 				for (var i = 0; i < objects.length; i++) {
 					if (objects[i].triggered) {
+						console.log('Object triggered: ' + objects[i].index);
 						outlineMesh.position.copy(objects[i].cube.position);
 						outlineMesh.rotation.copy(objects[i].cube.rotation);
 						outlineMesh.scale.copy(objects[i].cube.scale);
 						outlineMesh.scale.multiplyScalar(1.05);
 					}
+				}
+			}
+
+			function resetOutline() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+					outlineMesh.position.x = outlineMesh.position.y = outlineMesh.position.z = -99;
+					outlineMesh.scale.x = outlineMesh.scale.y = outlineMesh.scale.z = .5;
 				}
 			}
 
@@ -298,6 +316,19 @@
 					objects[i].cube.rotation.x -= .02;
 					//objects[i].cube.rotation.z += .01;
 				}
+			}
+
+			// Level failed, restart
+			function levelFailed() {
+				// Fail level condition
+			}
+
+			// Level Cleared, move to the next level 
+			function levelCleared() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+				}
+				// Move to the next level.
 			}
 
 			// Animate, Running 60 FPS at the moment.
