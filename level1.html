@@ -426,7 +426,7 @@
 				//checkObjectInFOV();
 				rotateObjects();
 				rotateLight();
-				rotateSkybox();
+				// rotateSkybox();
 				outlineObject();
 
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
@@ -442,12 +442,12 @@
 
 			// Render objects to the scene.
 			function render() {
-				theta += 0.1;
+				theta += 0.4;
 
 				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
-				camera.lookAt( scene.position );
+				// camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) ) + zOffset;
+				camera.lookAt( objects[0].cube.position );
 				raycastFromMouse();
 				renderer.render( scene, camera );
 			}
