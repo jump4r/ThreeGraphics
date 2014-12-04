@@ -310,8 +310,8 @@
 
 				raycaster = new THREE.Raycaster();
 
-				renderer = new THREE.WebGLRenderer();
-
+				renderer = new THREE.WebGLRenderer({antialias:true});
+            
 				renderer.shadowMapEnabled = true;
 				renderer.shadowMapType = THREE.PCFSoftShadowMap;
                 renderer.shadowMapSoft = true;
@@ -338,7 +338,7 @@
 				var sphereGeo = new THREE.SphereGeometry(20, 20, 20);
 
 				// Initilaize Start Square
-				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
+				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: 0xdd0000 } ) );
 				startCube.cube.position.x = -29;
 				startCube.cube.position.y = 12;
 				startCube.cube.position.z = -25;
@@ -352,7 +352,7 @@
 				scene.add(startCube.cube);
 
 				// Initialize End Square
-				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
+				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: 0x0000dd } ) );
 				endCube.cube.position.x = 29;
 				endCube.cube.position.y = 12;
 				endCube.cube.position.z = -25;
@@ -585,7 +585,7 @@
 			// Render objects to the scene.
 			function render() {
 				theta += 0.1;
-
+                
 				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
