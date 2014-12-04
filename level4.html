@@ -88,7 +88,7 @@
 				//camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / 2, window.innerHeight/-2, -400, 400 );
 
 				scene = new THREE.Scene();
-				scene.add(new THREE.AmbientLight(0x666666));
+				//scene.add(new THREE.AmbientLight(0x666666));
 				var light = new THREE.SpotLight( 0xdfebff, 1.75 );
 				light.position.set(30, 40, 50);
 			    light.position.multiplyScalar(1.3);
@@ -165,7 +165,7 @@
                 floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
                 floorTexture.repeat.set( 1, 1 );	
                 // DoubleSide: render texture on both sides of mesh
-                var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+                var floorMaterial = new THREE.MeshPhongMaterial( { map: floorTexture, side: THREE.DoubleSide } );
                 var floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 50);
 
                 var tempFloorGeo = new THREE.CubeGeometry(20, 0.5, 20);
@@ -174,7 +174,7 @@
 
                 floor.flipSided = false;
                 floor.castShadow = false;
-                floor.recieveShadow = true;
+                floor.receiveShadow = true;
 
                 floor.position.y = -3;
                 floor.rotation.x = Math.PI / 2;
@@ -186,7 +186,7 @@
 
 					object.traverse( function ( child ) {
 
-						if ( child instanceof THREE.Mesh ) {
+						if ( child instanceof THREE.MeshPhongMaterial ) {
 
 							child.material.map = texture;
 
@@ -200,7 +200,8 @@
 					object.position.z = -15;
 					object.scale.x = object.scale.y = object.scale.z = 7;
 					object.castShadow = true;
-					object.recieveShadow = false;
+                    light.castShadow = true;
+					object.receiveShadow = false;
 					this.scene.add( object );
                     
 				}, onProgress, onError );
@@ -312,7 +313,9 @@
 
 				renderer.shadowMapEnabled = true;
 				renderer.shadowMapType = THREE.PCFSoftShadowMap;
-
+                renderer.shadowMapSoft = true;
+                
+                
 				renderer.setClearColor( 0xf0f0f0 );
 				renderer.setClearColorHex(0x222222, 1);
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -528,7 +531,7 @@
 
 			function createBallObject() {
 				var sphereGeo = new THREE.SphereGeometry(20, 20, 20);
-				var object = new THREE.Mesh( sphereGeo, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+				var object = new THREE.Mesh( sphereGeo, new THREE.MeshPhongMaterial( { color: Math.random() * 0xffffff } ) );
 
 					//object.rotation.x = Math.random() * 2 * Math.PI;
 					//object.rotation.y = Math.random() * 2 * Math.PI;
@@ -582,9 +585,9 @@
 			function render() {
 				theta += 0.1;
 
-				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
 				camera.lookAt( scene.position );
 				raycastFromMouse();
 				renderer.render( scene, camera );
