@@ -58,12 +58,12 @@
 			var radius = 100, theta = 0;
 			var zOffset = -100;
 
+			var gameStart = false;
+			var gameOver = false;
+
 			var firstTime = (new Date()).getTime();
 			var directionalLight;
 			var skybox;
-
-			var gameStart = false;
-			var gameOver = false;
 
 			init();
 			animate();
@@ -81,7 +81,7 @@
 				info.style.width = '100%';
 				info.style.textAlign = 'left';
 				info.style.color = 'white';
-				info.innerHTML = 'Flow: Level 1'.fontsize(fontsize);
+				info.innerHTML = 'Track: Level 2'.fontsize(fontsize);
 				container.appendChild( info );
 
 				accInfo = document.createElement( 'div' );
@@ -95,7 +95,6 @@
 				accText = 'Accuracy: ' + accuracy.toString() + '%';
 				accInfo.innerHTML = accText.fontsize(fontsize);
 				container.appendChild( accInfo );
-
 			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 
@@ -107,7 +106,7 @@
       			directionalLight.position.set(0,0,1);
       			scene.add(directionalLight);
 
-      			var ambientLight = new THREE.AmbientLight(0x010101,0.2);
+      			var ambientLight = new THREE.AmbientLight(0x222222);
       			scene.add(ambientLight);
                
 				loadLevel();
@@ -115,7 +114,7 @@
 
 				raycaster = new THREE.Raycaster();
 
-				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer = new THREE.WebGLRenderer();
 				renderer.setClearColor( 0xf0f0f0 );
 				renderer.setClearColorHex(0x222222, 1);
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -124,16 +123,15 @@
 
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
-				//
-
 				window.addEventListener( 'resize', onWindowResize, false );
 
 			}
 
 			// Adds level objects to scene // This function will most likely change from every js file.
 			function loadLevel() {
-				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
+				var geometry = new THREE.BoxGeometry( 25, 25, 25);
+				var levelSide = [-1, 1];
+
 				var startMat = new THREE.MeshPhongMaterial({
 					// light
 					specular: '#ea6680',
@@ -152,10 +150,8 @@
 					emissive: '#000084',
 					shininess: 100});
 
-				
-				
 				// Initilaize Start Square
-				startCube.cube = new THREE.Mesh( geometry, startMat );
+				startCube.cube = new THREE.Mesh( geometry,startMat );
 				startCube.cube.position.x = 0;
 				startCube.cube.position.y = -60;
 				startCube.cube.position.z = zOffset;
@@ -172,9 +168,7 @@
 				endCube.cube.position.y = 60;
 				endCube.cube.position.z = zOffset;
 
-				endCube.cube.scale.x = 0.5;
-				endCube.cube.scale.y = 0.5;
-				endCube.cube.scale.z = 0.5;
+				endCube.cube.scale.x = endCube.cube.scale.y  = endCube.cube.scale.z =  0.75;
 				scene.add(endCube.cube);
 				raycastTargets.push(endCube.cube);
 
@@ -182,52 +176,41 @@
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
 			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
-			    //  scene.add(outlineMesh);
+			    scene.add(outlineMesh);
 
-				for ( var i = 0; i < 1; i ++ ) {
-					var Color = 0x009900;
-					var specColor = 0x4cb74c;
-					var emissColor = 0x005b00;
+				for ( var i = 0; i < 5; i ++ ) {
 
-					var midMat = new THREE.MeshPhongMaterial({
-					// light
-					specular: specColor,
-					// intermediate
-					color: Color,
-					// dark
-					emissive: emissColor,
-					shininess: 50});
+					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					var object = new THREE.Mesh( geometry, midMat );
-
-					object.position.x = 0;
-					object.position.y =0;
+					object.position.x = 100 * levelSide[i % levelSide.length];
+					object.position.y = -60 + ( i * 25 );
 					object.position.z = -100; // Math.random() * 800 - 400;
 
 					//object.rotation.x = Math.random() * 2 * Math.PI;
 					//object.rotation.y = Math.random() * 2 * Math.PI;
 					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.scale.x = Math.random() + 0.1;
-					object.scale.y = Math.random() + 4.5;
-					object.scale.z = Math.random() + 0.5;
+					object.scale.x = 1;
+					object.scale.y = 1;
+					object.scale.z = 1;
 
 					var gameCube = {
 						cube: object,
 						index: i,
 						triggered: false,
-						direction: 1,
+						direction: Math.random() < 0.5 ? 1 : -1,
 						initialXFall: Math.random() * 2 - 1,
 						initialYFall: Math.random() * 2 - 1
 					};
 
 					//console.log("Objects index is " + gameCube.index);
-					scene.add( gameCube.cube );
 					raycastTargets.push(gameCube.cube);
+					scene.add( gameCube.cube );
 					objects.push( gameCube );
 					//console.log("Objects' index is " + objects[i].index);
 
 				}
+
 				// SKYBOX //
 				var urls = [
 				  'cubemap/milkyway_px.png',
@@ -260,7 +243,6 @@
 				);
 
 				scene.add(skybox);
-								
 			}
 
 			// Window manager for Window Resizing.
@@ -276,7 +258,7 @@
 			// Event Manager for Mouse-Down
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
-				info.innerHTML = 'Flow: Level 1 - In Progress'.fontsize(fontsize);;
+				info.innerHTML = 'Track: Level 2 - In Progress'.fontsize(fontsize);;
 				gameStart = true;
 			}
 
@@ -302,6 +284,7 @@
 					if (gameStart) {
 						accuracy += 1;
 					}
+
 					if ( INTERSECTED != intersects[ 0 ].object ) {
 						if ( INTERSECTED && INTERSECTED.material.emissive != null ) 	
 							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
@@ -311,7 +294,7 @@
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
+								info.innerHTML = 'Track: Level 2 - Cleared'.fontsize(fontsize);
 								levelCleared();
 							}
 
@@ -332,7 +315,7 @@
 					if (gameStart) {
 						//console.log("Not valid, game ends");
 						//gameOver = true;
-						//info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
+						info.innerHTML = "Track: Level 2".fontsize(fontsize);
 					}		
 					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
 						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
@@ -383,7 +366,7 @@
 				// For each object, move based off it its position in the frustum
 				for ( var i = 0; i < objects.length; i++) {
 					//var pos = objects[i].cube.position.x;
-					moveObject(objects[i].cube);
+					moveObject(objects[i]);
 					objects[i].cube.position.x += 1;
 					objects[i].cube.updateMatrix();
 					objects[i].cube.updateMatrixWorld();
@@ -391,13 +374,25 @@
 					// Reverse Object Position if out of position.
 					if (!frustum.containsPoint(objects[i].cube.position)) {
 						console.log("Object " + objects[i].index + " is out of position." );
+						objects[i].direction = objects[i].direction * -1;
+
+						// Protect against slight glitches thorugh the frustrum.
+						if (objects[i].direction < 0)
+							objects[i].cube.position.x -= 2.0;
+						else
+							objects[i].cube.position.x += 1.0;
 					}
 				}
 			}
 
 			// Move Object (Left-Right position for right now)
 			function moveObject( object ) {
-				object.position.x += 1;
+				// I'm not totally sure why moving objects in the x-position returns different speeds based off of positive and negative, but it really makes me madd #NodejsmorelikeNOjs
+				if (object.direction < 0)
+					object.cube.position.x += -2.5;
+
+				if (object.direction > 0)
+					object.cube.position.x += 1;
 			}
 
 			// Drop all objects (lose condition).
@@ -427,12 +422,6 @@
 				directionalLight.position.set(Math.sin(timeDiff),0.1,Math.cos(timeDiff))
 			}
 
-			function rotateSkybox()
-			{
-				skybox.rotation.y -= 0.01;
-				console.log(skybox.rotation.y);
-			}
-
 			// Level failed, restart
 			function levelFailed() {
 				// Fail level condition
@@ -444,19 +433,17 @@
 					objects[i].triggered = false;
 				}
 				// Move to the next level.
-				window.location.href = './level2-accuracy.html';
+				window.location.href = './level3-accuracy.html';
 			}
 
 			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
-				//checkObjectInFOV();
-				rotateObjects();
+				checkObjectInFOV();
+				//rotateObjects();
+				//outlineObject();
 				rotateLight();
-				// rotateSkybox();
-				outlineObject();
 				updateAccuracy();
-
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
 					for (var i = 0; i < objects.length; i++ ) {
@@ -470,12 +457,12 @@
 
 			// Render objects to the scene.
 			function render() {
-				theta += 0.1;
+				theta += 0.8;
 
-				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				// camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) )+zOffset;
-				camera.lookAt( objects[0].cube.position );
+				// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.lookAt( scene.position );
 				raycastFromMouse();
 				renderer.render( scene, camera );
 			}
