@@ -9,17 +9,17 @@ Game
 	Lvl 1
 		Camera rotation
 		Undo skybox rotation
-		Fix skybox raycast bug
+		* Fix skybox raycast bug
 	Lvl 2
 		Add skybox
-		Fix skybox raycast bug
+		* Fix skybox raycast bug
 	Lvl 3
 		Add skybox
-		Fix skybox raycast bug
+		* Fix skybox raycast bug
 		antialias
 	Lvl 4
 		rotate skybox
-		slow down /  make beatable
+		* slow down /  make beatable
 	Optional
 		add hard mode
 
