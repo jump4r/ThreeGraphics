@@ -163,7 +163,7 @@
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
 			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
-			    scene.add(outlineMesh);
+			    //  scene.add(outlineMesh);
 
 				for ( var i = 0; i < 1; i ++ ) {
 					var Color = 0x009900;
@@ -398,7 +398,7 @@
 
 			function rotateSkybox()
 			{
-				skybox.rotation.y -= 0.10;
+				skybox.rotation.y -= 0.01;
 				console.log(skybox.rotation.y);
 			}
 
@@ -439,9 +439,9 @@
 			function render() {
 				theta += 0.1;
 
-				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
 				camera.lookAt( scene.position );
 				raycastFromMouse();
 				renderer.render( scene, camera );
