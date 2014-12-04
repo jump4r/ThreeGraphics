@@ -169,7 +169,7 @@
 					var Color = 0x009900;
 					var specColor = 0x4cb74c;
 					var emissColor = 0x005b00;
-					console.log(randomColor,randomEColor,randomSColor);
+
 					var midMat = new THREE.MeshPhongMaterial({
 					// light
 					specular: specColor,
@@ -235,7 +235,7 @@
 
 				// create skybox mesh
 				skybox = new THREE.Mesh(
-				  new THREE.CubeGeometry(1000, 1000, 1000),
+				  new THREE.BoxGeometry(1000, 1000, 1000),
 				  skyBoxMaterial
 				);
 
@@ -399,7 +399,7 @@
 			function rotateSkybox()
 			{
 				skybox.rotation.y -= 0.10;
-				console.log(skybox.rotation.y)
+				console.log(skybox.rotation.y);
 			}
 
 			// Level failed, restart
