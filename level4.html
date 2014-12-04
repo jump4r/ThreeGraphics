@@ -51,7 +51,11 @@
 			var outlineMesh;
 
 			// Variables for gravity & lose condition
-			var gravityAcceleration = 0.004;
+			var gravityAcceleration = 0.002
+
+
+
+			;
 
 			var info;
 			var fontsize = 5;
@@ -544,7 +548,7 @@
 			function rotateObjects() {
 				for (var i = 0; i < objects.length; i++) {
 					//objects[i].cube.rotation.x -= .02;
-					objects[i].cube.rotation.z += .01;
+					objects[i].cube.rotation.z -= .05;
 				}
 			}
 
@@ -558,7 +562,7 @@
 					objects[i].cube.position.y += objects[i].velocity;
 					objects[i].cube.position.x += 0.045;
 
-					if (objects[i].cube.position.x >= 20) {
+					if (objects[i].cube.position.x >= 15) {
 						console.log('Create Another ball');
 						scene.remove(objects[i].cube);
 						createBallObject();
@@ -619,7 +623,7 @@
 			function animate() {
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
-				//rotateObjects();
+				rotateObjects();
 				outlineObject();
 				bounceObjects();
 				// Lose Condition, drop the objects if the player loses and make them reload the game.

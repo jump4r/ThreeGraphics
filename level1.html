@@ -49,6 +49,7 @@
 			var info;
 			var fontsize = 5;
 
+			var raycastTargets = [];
 			var objects = [];
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
@@ -147,6 +148,7 @@
 				startCube.cube.scale.y = 0.5;
 				startCube.cube.scale.z = 0.5;
 				scene.add(startCube.cube);
+				raycastTargets.push(startCube.cube);
 
 				// Initialize End Square
 				endCube.cube = new THREE.Mesh( geometry, endMat );
@@ -158,6 +160,7 @@
 				endCube.cube.scale.y = 0.5;
 				endCube.cube.scale.z = 0.5;
 				scene.add(endCube.cube);
+				raycastTargets.push(endCube.cube);
 
 				// Initialize Outline Geometry
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
@@ -204,6 +207,7 @@
 
 					//console.log("Objects index is " + gameCube.index);
 					scene.add( gameCube.cube );
+					raycastTargets.push(gameCube.cube);
 					objects.push( gameCube );
 					//console.log("Objects' index is " + objects[i].index);
 
@@ -276,7 +280,7 @@
 
 				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
 
-				var intersects = raycaster.intersectObjects( scene.children );
+				var intersects = raycaster.intersectObjects( raycastTargets );
 
 				if ( intersects.length > 0 ) {
 					if ( INTERSECTED != intersects[ 0 ].object ) {
