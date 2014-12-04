@@ -457,6 +457,7 @@
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
 								info.innerHTML = 'Snow: Level 4 - Cleared'.fontsize(fontsize);
+								levelCleared();
 							}
 
 							if (objects[i].cube.position.y == INTERSECTED.position.y && gameStart) {

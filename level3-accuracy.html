@@ -303,7 +303,7 @@
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Scale: Level 3 - Cleared'.fontsize(fontsize);
+								//info.innerHTML = 'Scale: Level 3 - Cleared'.fontsize(fontsize);
 								levelCleared();
 							}
 
@@ -454,7 +454,14 @@
 					objects[i].triggered = false;
 				}
 				// Move to the next level.
-				window.location.href = './level4-accuracy.html';
+				if ((accuracy / maxAccuracy) > .92) {
+					info.innerHTML = 'Scale: Level 3 - Cleared'.fontsize(fontsize);
+					window.location.href = './level4-accuracy.html';
+				}
+				else {
+					info.innerHTML = 'Scale: Level 3 - Failed'.fontsize(fontsize);
+					window.location.reload();
+				}
 			}
 
 			// Animate, Running 60 FPS at the moment.

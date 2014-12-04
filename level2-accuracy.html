@@ -281,8 +281,11 @@
 				var intersects = raycaster.intersectObjects( raycastTargets );
 
 				if ( intersects.length > 0 ) {
-					if (gameStart) {
+					if (gameStart && intersects[0].object.position.y != startCube.cube.position.y) {
 						accuracy += 1;
+					}
+					if (gameStart && intersects[0].object.position.y == startCube.cube.position.y) {
+						maxAccuracy -= 1;
 					}
 
 					if ( INTERSECTED != intersects[ 0 ].object ) {
@@ -433,7 +436,14 @@
 					objects[i].triggered = false;
 				}
 				// Move to the next level.
-				window.location.href = './level3-accuracy.html';
+				if ((accuracy / maxAccuracy) > .92) {
+					info.innerHTML = 'Track: Level 2 - Cleared'.fontsize(fontsize);
+					window.location.href = './level3-accuracy.html';
+				}
+				else {
+					info.innerHTML = 'Track: Level 2 - Failed'.fontsize(fontsize);
+					window.location.reload();
+				}
 			}
 
 			// Animate, Running 60 FPS at the moment.
