@@ -166,17 +166,17 @@
 			    scene.add(outlineMesh);
 
 				for ( var i = 0; i < 1; i ++ ) {
-					var randomColor = 0xffffff * Math.random();
-					var randomSColor = Math.min(randomColor*1.2,0xffffff);
-					var randomEColor = Math.max(randomColor*0.8,0x000000);
+					var Color = 0x009900;
+					var specColor = 0x4cb74c;
+					var emissColor = 0x005b00;
 					console.log(randomColor,randomEColor,randomSColor);
 					var midMat = new THREE.MeshPhongMaterial({
 					// light
-					specular: randomSColor,
+					specular: specColor,
 					// intermediate
-					color: randomColor,
+					color: Color,
 					// dark
-					emissive: randomEColor,
+					emissive: emissColor,
 					shininess: 50});
 
 					var object = new THREE.Mesh( geometry, midMat );
