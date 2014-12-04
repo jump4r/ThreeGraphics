@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>WebGL Game</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="js/build/three.min.js"></script>
+		<script src="js/Frustum.js"></script>
+       
+		<script>
+
+			var container, stats;
+			var camera, scene, raycaster, renderer;
+
+			// Declare Start and End Cubes
+			var startCube = {
+				cube: null,
+				index: -1,
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
+			};
+
+			var endCube = {
+				cube: null,
+				index: -2,
+				triggered: false,
+				initialXFall: Math.random() * 2 - 1,
+				initialYFall: Math.random() * 2 - 1
+			};
+
+			var outlineMesh, outlineTarget;
+
+			// Variables for gravity & lose condition
+			var gravityAcceleration = 0.02;
+
+			var info, accInfo, accText;
+			var fontsize = 5;
+
+			var accuracy = 0;
+			var maxAccuracy = 0;
+
+			var raycastTargets = [];
+			var objects = [];
+			var mouse = new THREE.Vector2(), INTERSECTED;
+			var radius = 100, theta = 0;
+			var zOffset = -100;
+
+			var firstTime = (new Date()).getTime();
+			var directionalLight;
+			var skybox;
+
+			var gameStart = false;
+			var gameOver = false;
+
+			init();
+			animate();
+
+			// Initial.
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				
+				info = document.createElement( 'div' );
+				info.style.position = 'absolute';
+				info.style.top = '12px';
+				info.style.padding = '20px';
+				info.style.width = '100%';
+				info.style.textAlign = 'left';
+				info.style.color = 'white';
+				info.innerHTML = 'Flow: Level 1'.fontsize(fontsize);
+				container.appendChild( info );
+
+				accInfo = document.createElement( 'div' );
+				accInfo.style.position = 'absolute';
+				accInfo.style.top = '12px';
+				accInfo.style.paddingTop = '50px';
+				accInfo.style.paddingLeft = '20px';
+				accInfo.style.width = '100%';
+				accInfo.style.textAlign = 'left';
+				accInfo.style.color = 'white';
+				accText = 'Accuracy: ' + accuracy.toString() + '%';
+				accInfo.innerHTML = accText.fontsize(fontsize);
+				container.appendChild( accInfo );
+
+			
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+
+				//camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / 2, window.innerHeight/-2, -400, 400 );
+
+				scene = new THREE.Scene();
+
+				directionalLight = new THREE.DirectionalLight(0xffffff,0.75);
+      			directionalLight.position.set(0,0,1);
+      			scene.add(directionalLight);
+
+      			var ambientLight = new THREE.AmbientLight(0x010101,0.2);
+      			scene.add(ambientLight);
+               
+				loadLevel();
+				console.log("Number of objects saved in scene: " + objects.length);
+
+				raycaster = new THREE.Raycaster();
+
+				renderer = new THREE.WebGLRenderer({antialias:true});
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setClearColorHex(0x222222, 1);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.sortObjects = false;
+				container.appendChild(renderer.domElement);
+
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			// Adds level objects to scene // This function will most likely change from every js file.
+			function loadLevel() {
+				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
+				var startMat = new THREE.MeshPhongMaterial({
+					// light
+					specular: '#ea6680',
+					// intermediate
+					color: '#dd0000',
+					// dark
+					emissive: '#840000',
+					shininess: 100});
+
+				var endMat = new THREE.MeshPhongMaterial({
+					// light
+					specular: '#7f7fee',
+					// intermediate
+					color: '#0000dd',
+					// dark
+					emissive: '#000084',
+					shininess: 100});
+
+				
+				
+				// Initilaize Start Square
+				startCube.cube = new THREE.Mesh( geometry, startMat );
+				startCube.cube.position.x = 0;
+				startCube.cube.position.y = -60;
+				startCube.cube.position.z = zOffset;
+
+				startCube.cube.scale.x = 0.5;
+				startCube.cube.scale.y = 0.5;
+				startCube.cube.scale.z = 0.5;
+				scene.add(startCube.cube);
+				raycastTargets.push(startCube.cube);
+
+				// Initialize End Square
+				endCube.cube = new THREE.Mesh( geometry, endMat );
+				endCube.cube.position.x = 0;
+				endCube.cube.position.y = 60;
+				endCube.cube.position.z = zOffset;
+
+				endCube.cube.scale.x = 0.5;
+				endCube.cube.scale.y = 0.5;
+				endCube.cube.scale.z = 0.5;
+				scene.add(endCube.cube);
+				raycastTargets.push(endCube.cube);
+
+				// Initialize Outline Geometry
+				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
+			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
+			    outlineMesh.position.x = outlineMesh.position.y = 100;
+			    //  scene.add(outlineMesh);
+
+				for ( var i = 0; i < 1; i ++ ) {
+					var Color = 0x009900;
+					var specColor = 0x4cb74c;
+					var emissColor = 0x005b00;
+
+					var midMat = new THREE.MeshPhongMaterial({
+					// light
+					specular: specColor,
+					// intermediate
+					color: Color,
+					// dark
+					emissive: emissColor,
+					shininess: 50});
+
+					var object = new THREE.Mesh( geometry, midMat );
+
+					object.position.x = 0;
+					object.position.y =0;
+					object.position.z = -100; // Math.random() * 800 - 400;
+
+					//object.rotation.x = Math.random() * 2 * Math.PI;
+					//object.rotation.y = Math.random() * 2 * Math.PI;
+					//object.rotation.z = Math.random() * 2 * Math.PI;
+
+					object.scale.x = Math.random() + 0.1;
+					object.scale.y = Math.random() + 4.5;
+					object.scale.z = Math.random() + 0.5;
+
+					var gameCube = {
+						cube: object,
+						index: i,
+						triggered: false,
+						direction: 1,
+						initialXFall: Math.random() * 2 - 1,
+						initialYFall: Math.random() * 2 - 1
+					};
+
+					//console.log("Objects index is " + gameCube.index);
+					scene.add( gameCube.cube );
+					raycastTargets.push(gameCube.cube);
+					objects.push( gameCube );
+					//console.log("Objects' index is " + objects[i].index);
+
+				}
+				// SKYBOX //
+				var urls = [
+				  'cubemap/milkyway_px.png',
+				  'cubemap/milkyway_nx.png',
+				  'cubemap/milkyway_py.png',
+				  'cubemap/milkyway_ny.png',
+				  'cubemap/milkyway_pz.png',
+				  'cubemap/milkyway_nz.png'
+				];
+
+				var cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
+				cubemap.format = THREE.RGBFormat;
+
+				var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
+				shader.uniforms['tCube'].value = cubemap; // apply textures to shader
+
+				// create shader material
+				var skyBoxMaterial = new THREE.ShaderMaterial( {
+				  fragmentShader: shader.fragmentShader,
+				  vertexShader: shader.vertexShader,
+				  uniforms: shader.uniforms,
+				  depthWrite: false,
+				  side: THREE.BackSide
+				});
+
+				// create skybox mesh
+				skybox = new THREE.Mesh(
+				  new THREE.BoxGeometry(1000, 1000, 1000),
+				  skyBoxMaterial
+				);
+
+				scene.add(skybox);
+								
+			}
+
+			// Window manager for Window Resizing.
+			function onWindowResize() {
+
+				//camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			// Event Manager for Mouse-Down
+			function onDocumentMouseDown( event ) {
+				console.log("Game Started!");
+				info.innerHTML = 'Flow: Level 1 - In Progress'.fontsize(fontsize);;
+				gameStart = true;
+			}
+
+			// Event Manager for Mouse-Move
+			function onDocumentMouseMove( event ) {
+
+				event.preventDefault();
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+
+			// Raycast to check and see if object is  valid
+			function raycastFromMouse() {
+				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+
+				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+				var intersects = raycaster.intersectObjects( raycastTargets );
+
+				if ( intersects.length > 0 ) {
+					if (gameStart) {
+						accuracy += 1;
+					}
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) 	
+							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+						//console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
+						//console.log("Object x-position: " + intersects[0].object.position.x);
+						resetOutline();
+						INTERSECTED = intersects[ 0 ].object;
+						for (var i = 0; i < objects.length; i++) {
+							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
+								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
+								levelCleared();
+							}
+
+							if (objects[i].cube.position.y == INTERSECTED.position.y && gameStart) {
+								console.log('Trigger object ' + objects[i].index);
+								objects[i].triggered = true;
+							}
+						}
+
+						if ( INTERSECTED && INTERSECTED.material.emissive != null ) {
+							INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+							INTERSECTED.material.emissive.setHex( 0x777777 );
+						}
+					}
+				} 
+				else {
+					// If the player is off the court, the game ends.
+					if (gameStart) {
+						//console.log("Not valid, game ends");
+						//gameOver = true;
+						//info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
+					}		
+					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
+						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					INTERSECTED = null;
+				}
+			}
+
+			function updateAccuracy() {
+				if (gameStart) {
+					maxAccuracy += 1;
+					accText = 'Accuracy: ' + (((accuracy + 1) / maxAccuracy) * 100).toFixed(2).toString() + '%';
+					accInfo.innerHTML = accText.fontsize(fontsize);;
+				}
+			}
+
+			function outlineObject() {
+				for (var i = 0; i < objects.length; i++) {
+					if (objects[i].triggered) {
+						console.log('Object triggered: ' + objects[i].index);
+						outlineMesh.position.copy(objects[i].cube.position);
+						outlineMesh.rotation.copy(objects[i].cube.rotation);
+						outlineMesh.scale.copy(objects[i].cube.scale);
+						outlineMesh.scale.multiplyScalar(1.05);
+					}
+				}
+			}
+
+			function resetOutline() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+					outlineMesh.position.x = outlineMesh.position.y = outlineMesh.position.z = -99;
+					outlineMesh.scale.x = outlineMesh.scale.y = outlineMesh.scale.z = .5;
+				}
+			}
+
+			// Checks the frustrum of the camera to tell if the object is in the scene view or not.
+			function checkObjectInFOV() {
+				// Update Camera matrix
+				camera.updateMatrix();
+				camera.updateMatrixWorld();
+				camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+				// Check to see whether objects need to turned
+				// Make new Frustrum
+				var frustum = new THREE.Frustum();
+				frustum.setFromMatrix( new THREE.Matrix4().multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse ) );
+
+				// For each object, move based off it its position in the frustum
+				for ( var i = 0; i < objects.length; i++) {
+					//var pos = objects[i].cube.position.x;
+					moveObject(objects[i].cube);
+					objects[i].cube.position.x += 1;
+					objects[i].cube.updateMatrix();
+					objects[i].cube.updateMatrixWorld();
+
+					// Reverse Object Position if out of position.
+					if (!frustum.containsPoint(objects[i].cube.position)) {
+						console.log("Object " + objects[i].index + " is out of position." );
+					}
+				}
+			}
+
+			// Move Object (Left-Right position for right now)
+			function moveObject( object ) {
+				object.position.x += 1;
+			}
+
+			// Drop all objects (lose condition).
+			function dropObject( object ) {
+				//console.log('dropping object');
+
+				// Drop Object with a gravity acceleration
+				object.cube.position.y += object.initialYFall;
+				object.initialYFall -= gravityAcceleration;
+
+				// Explode Object Left or right if its initial x-vel is 0, otheriwise, drop it like an ugly baby.
+				object.cube.position.x += object.initialXFall;
+			}
+
+			// Rotate Objects (Around X axis, if RotateY is needed it'll be created).
+			function rotateObjects() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].cube.rotation.x -= .02;
+					//objects[i].cube.rotation.z += .01;
+				}
+			}
+
+			function rotateLight()
+			{
+				var time = (new Date()).getTime();
+        		var timeDiff = ((time - firstTime)*2*Math.PI/1000)*0.10;
+				directionalLight.position.set(Math.sin(timeDiff),0.1,Math.cos(timeDiff))
+			}
+
+			function rotateSkybox()
+			{
+				skybox.rotation.y -= 0.01;
+				console.log(skybox.rotation.y);
+			}
+
+			// Level failed, restart
+			function levelFailed() {
+				// Fail level condition
+			}
+
+			// Level Cleared, move to the next level 
+			function levelCleared() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+				}
+				// Move to the next level.
+				window.location.href = './level2.html';
+			}
+
+			// Animate, Running 60 FPS at the moment.
+			function animate() {
+				requestAnimationFrame( animate );
+				//checkObjectInFOV();
+				rotateObjects();
+				rotateLight();
+				rotateSkybox();
+				outlineObject();
+				updateAccuracy();
+
+				// Lose Condition, drop the objects if the player loses and make them reload the game.
+				if (gameOver) {
+					for (var i = 0; i < objects.length; i++ ) {
+						dropObject(objects[i]);
+					}
+					dropObject(startCube);
+					dropObject(endCube);
+				}
+				render();
+			}
+
+			// Render objects to the scene.
+			function render() {
+				theta += 0.1;
+
+				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.lookAt( scene.position );
+				raycastFromMouse();
+				renderer.render( scene, camera );
+			}
+		</script>
+	</body>
+</html>
