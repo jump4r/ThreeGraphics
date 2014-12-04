@@ -44,13 +44,17 @@
 				initialYFall: Math.random() * 2 - 1
 			};
 
+			// Declare Floor
+			var floor;	
+
 			// Variables for gravity & lose condition
-			var gravityAcceleration = 0.02;
+			var gravityAcceleration = 0.01;
 
 			var info;
 			var fontsize = 5;
 
 			var objects = [];
+			var raycastTargets = [];
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
 			var zOffset = -100;
@@ -83,8 +87,24 @@
 
 				scene = new THREE.Scene();
 
-				var light = new THREE.DirectionalLight( 0xffffff, 1 );
-				light.position.set( 1, 1, 1 ).normalize();
+				var light = new THREE.SpotLight( 0xffffff, 1 );
+				light.position.set( 0, 1500, 1000);
+				light.target.position.set(0, 0, 0);
+
+				light.castShadow = true;
+
+				light.shadowCameraNear = 1200;
+				light.shadowCameraFar = 2500;
+				light.shadowCameraFov = 50;
+
+				//light.shadowCameraVisible = true;
+
+				light.shadowBias = 0.0001;
+				light.shadowDarkness = 0.5;
+
+				light.shadowMapWidth = 2048;
+				light.shadowMapHeight = 1024;
+
 				scene.add( light );
                 //skybox
                 
@@ -134,11 +154,13 @@
                 //floor
                 var floorTexture = new THREE.ImageUtils.loadTexture( 'textures/snow.jpg' );
                 floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
-                floorTexture.repeat.set( 1, 1 );
+                floorTexture.repeat.set( 1, 1 );	
                 // DoubleSide: render texture on both sides of mesh
                 var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
                 var floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 50);
-                var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.castShadow = false;
+                floor.recieveShadow = true;
                 floor.position.y = -3;
                 floor.rotation.x = Math.PI / 2;
                 scene.add(floor);
@@ -262,6 +284,10 @@
 				raycaster = new THREE.Raycaster();
 
 				renderer = new THREE.WebGLRenderer();
+
+				renderer.shadowMapEnabled = true;
+				//renderer.shadowMapType = THREE.PCFShadowMap();
+
 				renderer.setClearColor( 0xf0f0f0 );
 				renderer.setClearColorHex(0x222222, 1);
 				renderer.setSize( window.innerWidth, window.innerHeight );
@@ -280,61 +306,62 @@
 			// Adds level objects to scene // This function will most likely change from every js file.
 			function loadLevel() {
 				var geometry = new THREE.BoxGeometry( 20, 20, 20 );
+				var sphereGeo = new THREE.SphereGeometry(20, 20, 20);
 
 				// Initilaize Start Square
 				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
-				startCube.cube.position.x = 140;
-				startCube.cube.position.y = -50;
-				startCube.cube.position.z = zOffset;
+				startCube.cube.position.x = -29;
+				startCube.cube.position.y = 12;
+				startCube.cube.position.z = -25;
 
-				startCube.cube.scale.x = 0.5;
-				startCube.cube.scale.y = 0.5;
-				startCube.cube.scale.z = 0.5;
+				startCube.cube.castShadow = true;
+				startCube.cube.recieveShadow = false;
+
+				startCube.cube.scale.x = startCube.cube.scale.y = 0.20;
+				startCube.cube.scale.z= 0.01;
+				raycastTargets.push(startCube.cube);
 				scene.add(startCube.cube);
 
 				// Initialize End Square
 				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
-				endCube.cube.position.x = -140;
-				endCube.cube.position.y = 50;
-				endCube.cube.position.z = zOffset;
+				endCube.cube.position.x = 29;
+				endCube.cube.position.y = 12;
+				endCube.cube.position.z = -25;
 
-				endCube.cube.scale.x = 0.5;
-				endCube.cube.scale.y = 0.5;
-				endCube.cube.scale.z = 0.5;
+				endCube.cube.castShadow = true;
+				endCube.cube.recieveShadow = false;
+
+				endCube.cube.scale.x = endCube.cube.scale.y = 0.20;
+				endCube.cube.scale.z = 0.02;
+				raycastTargets.push(endCube.cube);
 				scene.add(endCube.cube);
 
-				for ( var i = 0; i < 3; i ++ ) {
+				for ( var i = 0; i < 1; i ++ ) {
 
-					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
-
-					object.position.x = -73+i*137;
-                    if(i == 2){
-                    object.position.x = 0;
-                    }
-					object.position.y =0;
-                    if(i == 2){
-                    object.position.y = -40;
-                    }
-					object.position.z = -70; // Math.random() * 800 - 400;
+					var object = new THREE.Mesh( sphereGeo, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
 					//object.rotation.x = Math.random() * 2 * Math.PI;
 					//object.rotation.y = Math.random() * 2 * Math.PI;
 					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.scale.x = 0.35;
-					object.scale.y = 4.5;
-					object.scale.z = 0.2;
+					object.position.x = -10;
+					object.position.y = 5;
+					object.position.z = -10;
+
+					object.scale.x = object.scale.y = object.scale.z = .02;
 
 					var gameCube = {
 						cube: object,
 						index: i,
 						direction: 1,
+						velocity: 0,
 						initialXFall: Math.random() * 2 - 1,
 						initialYFall: Math.random() * 2 - 1
 					};
 
 					//console.log("Objects index is " + gameCube.index);
 					scene.add( gameCube.cube );
+					raycastTargets.push(gameCube.cube);
 					objects.push( gameCube );
 					console.log("Objects' index is " + objects[i].index)
 
@@ -374,7 +401,7 @@
 
 				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
 
-				var intersects = raycaster.intersectObjects( scene.children );
+				var intersects = raycaster.intersectObjects( raycastTargets );
 
 				if ( intersects.length > 0 ) {
 					if ( INTERSECTED != intersects[ 0 ].object ) {
@@ -455,12 +482,62 @@
 				}
 			}
 
+			function bounceObjects() {
+				for (var i = 0; i < objects.length; i++) {
+					// Move objects according to gravity
+					objects[i].velocity -= gravityAcceleration;
+					if ( objects[i].cube.position.y <= floor.position.y ) {
+						objects[i].velocity *= -.98;
+					}
+					objects[i].cube.position.y += objects[i].velocity;
+					objects[i].cube.position.x += 0.1;
+
+					if (objects[i].cube.position.x >= 20) {
+						console.log('Create Another ball');
+						scene.remove(objects[i].cube);
+						createBallObject();
+					}
+				}
+			}
+
+			function createBallObject() {
+				var sphereGeo = new THREE.SphereGeometry(20, 20, 20);
+				var object = new THREE.Mesh( sphereGeo, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+
+					//object.rotation.x = Math.random() * 2 * Math.PI;
+					//object.rotation.y = Math.random() * 2 * Math.PI;
+					//object.rotation.z = Math.random() * 2 * Math.PI;
+
+					object.position.x = -13;
+					object.position.y = 6;
+					object.position.z = -10;
+
+					object.scale.x = object.scale.y = object.scale.z = .05;
+
+					var gameCube = {
+						cube: object,
+						index: 0,
+						direction: 1,
+						velocity: 0,
+						initialXFall: Math.random() * 2 - 1,
+						initialYFall: Math.random() * 2 - 1
+					};
+
+					//console.log("Objects index is " + gameCube.index);
+					scene.add( gameCube.cube );
+					raycastTargets.push(gameCube.cube);
+					objects.pop();
+					objects.push( gameCube );
+					console.log("Objects' index is " + object.index)
+
+			}
+
 			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
-				rotateObjects();
-
+				//rotateObjects();
+				bounceObjects();
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
 					for (var i = 0; i < objects.length; i++ ) {
