@@ -154,10 +154,11 @@
                 var skyBoxMaterial = new THREE.MeshBasicMaterial( { map: skyTexture, side: THREE.BackSide } );
 
                 var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
-
+                
                 skyBox.castShadow = false;
                 skyBox.recieveShadow = false;
-                //scene.add(skyBox);
+                skyBox.rotation.x = 50;
+                scene.add(skyBox);
                 
                 //floor
                 
