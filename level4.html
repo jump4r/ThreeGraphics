@@ -10,7 +10,7 @@
 				font-family: Monospace;
 				background-color: #f0f0f0;
 				margin: 0px;
-				overflow: hidden;
+				overSnow: hidden;
 			}
 		</style>
 	</head>
@@ -47,8 +47,11 @@
 			// Declare Floor
 			var floor, plane;	
 
+			// Outline Mesh
+			var outlineMesh;
+
 			// Variables for gravity & lose condition
-			var gravityAcceleration = 0.01;
+			var gravityAcceleration = 0.004;
 
 			var info;
 			var fontsize = 5;
@@ -78,7 +81,7 @@
 				info.style.width = '100%';
 				info.style.textAlign = 'left';
 				info.style.color = 'white';
-				info.innerHTML = 'Flow: Level 1'.fontsize(fontsize);
+				info.innerHTML = 'Snow: Level 4'.fontsize(fontsize);
 				container.appendChild( info );
 			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -365,6 +368,12 @@
 				raycastTargets.push(endCube.cube);
 				scene.add(endCube.cube);
 
+				// Initialize Outline Geometry
+				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
+			    outlineMesh = new THREE.Mesh( sphereGeo, outlineMaterial );
+			    outlineMesh.position.x = outlineMesh.position.y = 100;
+			    scene.add(outlineMesh);
+
 				for ( var i = 0; i < 1; i ++ ) {
 
 					var object = new THREE.Mesh( sphereGeo, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
@@ -373,12 +382,13 @@
 					//object.rotation.y = Math.random() * 2 * Math.PI;
 					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					object.position.x = -10;
-					object.position.y = 5;
+					object.position.x = -13;
+					object.position.y = 6;
 					object.position.z = -10;
+
 					object.castShadow = true;
 					object.recieveShadow = false;
-					object.scale.x = object.scale.y = object.scale.z = .02;
+					object.scale.x = object.scale.y = object.scale.z = .05;
 
 					var gameCube = {
 						cube: object,
@@ -411,7 +421,7 @@
 			// Event Manager for Mouse-Down
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
-				info.innerHTML = 'Flow: Level 1 - In Progress'.fontsize(fontsize);;
+				info.innerHTML = 'Snow: Level 4 - In Progress'.fontsize(fontsize);;
 				gameStart = true;
 			}
 
@@ -435,17 +445,23 @@
 
 				if ( intersects.length > 0 ) {
 					if ( INTERSECTED != intersects[ 0 ].object ) {
-						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+						if ( INTERSECTED  && INTERSECTED.material.emissive != null) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 						console.log("Valid on game cube, Hex value is " + intersects[0].object.position.y);
 						//console.log("Object x-position: " + intersects[0].object.position.x);
+						resetOutline();
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Flow: Level 1 - Cleared'.fontsize(fontsize);
+								info.innerHTML = 'Snow: Level 4 - Cleared'.fontsize(fontsize);
+							}
+
+							if (objects[i].cube.position.y == INTERSECTED.position.y && gameStart) {
+								console.log('Trigger object ' + objects[i].index);
+								objects[i].triggered = true;
 							}
 						}
 						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex( 0xff0000 );
+						INTERSECTED.material.emissive.setHex( 0x777777 );
 					}
 				} 
 				else {
@@ -453,7 +469,7 @@
 					if (gameStart) {
 						console.log("Not valid, game ends");
 						gameOver = true;
-						info.innerHTML = "Flow: Level 1 - Failed".fontsize(fontsize);
+						info.innerHTML = "Snow: Level 4 - Failed".fontsize(fontsize);
 					}		
 					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = null;
@@ -484,6 +500,26 @@
 					if (!frustum.containsPoint(objects[i].cube.position)) {
 						console.log("Object " + objects[i].index + " is out of position." );
 					}
+				}
+			}
+
+			function outlineObject() {
+				for (var i = 0; i < objects.length; i++) {
+					if (objects[i].triggered) {
+						console.log('Object triggered: ' + objects[i].index);
+						outlineMesh.position.copy(objects[i].cube.position);
+						outlineMesh.rotation.copy(objects[i].cube.rotation);
+						outlineMesh.scale.copy(objects[i].cube.scale);
+						outlineMesh.scale.multiplyScalar(1.05);
+					}
+				}
+			}
+
+			function resetOutline() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+					outlineMesh.position.x = outlineMesh.position.y = outlineMesh.position.z = -99;
+					outlineMesh.scale.x = outlineMesh.scale.y = outlineMesh.scale.z = .5;
 				}
 			}
 
@@ -520,7 +556,7 @@
 						objects[i].velocity *= -.98;
 					}
 					objects[i].cube.position.y += objects[i].velocity;
-					objects[i].cube.position.x += 0.1;
+					objects[i].cube.position.x += 0.045;
 
 					if (objects[i].cube.position.x >= 20) {
 						console.log('Create Another ball');
@@ -565,11 +601,26 @@
 
 			}
 
+			// Level failed, restart
+			function levelFailed() {
+				// Fail level condition
+			}
+
+			// Level Cleared, move to the next level 
+			function levelCleared() {
+				for (var i = 0; i < objects.length; i++) {
+					objects[i].triggered = false;
+				}
+				// Move to the next level.
+				window.location.href = './level4.html';
+			}
+
 			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
 				//rotateObjects();
+				outlineObject();
 				bounceObjects();
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
