@@ -24,10 +24,6 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
-			var scaleStep = 0.04;
-			var scaleMax = 2;
-			var scaleMin = 0.5;
-
 			// Declare Start and End Cubes
 			var startCube = {
 				cube: null,
@@ -50,8 +46,11 @@
 			// Variables for gravity & lose condition
 			var gravityAcceleration = 0.02;
 
-			var info;
+			var info, accInfo, accText;
 			var fontsize = 5;
+
+			var accuracy = 0;
+			var maxAccuracy = 0;
 
 			var raycastTargets = [];
 			var objects = [];
@@ -82,8 +81,20 @@
 				info.style.width = '100%';
 				info.style.textAlign = 'left';
 				info.style.color = 'white';
-				info.innerHTML = 'Scale: Level 3'.fontsize(fontsize);
+				info.innerHTML = 'Track: Level 2'.fontsize(fontsize);
 				container.appendChild( info );
+
+				accInfo = document.createElement( 'div' );
+				accInfo.style.position = 'absolute';
+				accInfo.style.top = '12px';
+				accInfo.style.paddingTop = '50px';
+				accInfo.style.paddingLeft = '20px';
+				accInfo.style.width = '100%';
+				accInfo.style.textAlign = 'left';
+				accInfo.style.color = 'white';
+				accText = 'Accuracy: ' + accuracy.toString() + '%';
+				accInfo.innerHTML = accText.fontsize(fontsize);
+				container.appendChild( accInfo );
 			
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 
@@ -118,7 +129,7 @@
 
 			// Adds level objects to scene // This function will most likely change from every js file.
 			function loadLevel() {
-				var geometry = new THREE.BoxGeometry( 15, 15, 15);
+				var geometry = new THREE.BoxGeometry( 25, 25, 25);
 				var levelSide = [-1, 1];
 
 				var startMat = new THREE.MeshPhongMaterial({
@@ -157,38 +168,35 @@
 				endCube.cube.position.y = 60;
 				endCube.cube.position.z = zOffset;
 
-
 				endCube.cube.scale.x = endCube.cube.scale.y  = endCube.cube.scale.z =  0.75;
-				raycastTargets.push(endCube.cube);
 				scene.add(endCube.cube);
+				raycastTargets.push(endCube.cube);
 
 				// Initialize Outline Geometry
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
 			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
-			    // scene.add(outlineMesh);
+			    scene.add(outlineMesh);
 
-				for ( var i = 0; i < 11; i ++ ) {
-					var curColor = Math.random() *0xffffff;
-					var eColor = Math.max(0x111111, curColor*0.1);
+				for ( var i = 0; i < 5; i ++ ) {
 
-					var object = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: curColor, emissive: eColor } ) );
+					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					object.position.x = Math.random() * 100 - 50;
-					object.position.y = Math.random() * 100 - 50;
-					object.position.z = Math.random() * 10 + zOffset;
+					object.position.x = 100 * levelSide[i % levelSide.length];
+					object.position.y = -60 + ( i * 25 );
+					object.position.z = -100; // Math.random() * 800 - 400;
 
-					object.rotation.x = Math.random() * 2 * Math.PI;
-					object.rotation.y = Math.random() * 2 * Math.PI;
-					object.rotation.z = Math.random() * 2 * Math.PI;
+					//object.rotation.x = Math.random() * 2 * Math.PI;
+					//object.rotation.y = Math.random() * 2 * Math.PI;
+					//object.rotation.z = Math.random() * 2 * Math.PI;
 
-					var objectRandomScale = Math.random() * 0.5 + 0.5;
-					object.scale.x = object.scale.y = object.scale.z = objectRandomScale;
+					object.scale.x = 1;
+					object.scale.y = 1;
+					object.scale.z = 1;
 
 					var gameCube = {
 						cube: object,
 						index: i,
-						scaleDir: 1,
 						triggered: false,
 						direction: Math.random() < 0.5 ? 1 : -1,
 						initialXFall: Math.random() * 2 - 1,
@@ -196,8 +204,8 @@
 					};
 
 					//console.log("Objects index is " + gameCube.index);
+					raycastTargets.push(gameCube.cube);
 					scene.add( gameCube.cube );
-					raycastTargets.push( gameCube.cube );
 					objects.push( gameCube );
 					//console.log("Objects' index is " + objects[i].index);
 
@@ -250,7 +258,7 @@
 			// Event Manager for Mouse-Down
 			function onDocumentMouseDown( event ) {
 				console.log("Game Started!");
-				info.innerHTML = 'Scale: Level 3 - In Progress'.fontsize(fontsize);;
+				info.innerHTML = 'Track: Level 2 - In Progress'.fontsize(fontsize);;
 				gameStart = true;
 			}
 
@@ -273,6 +281,10 @@
 				var intersects = raycaster.intersectObjects( raycastTargets );
 
 				if ( intersects.length > 0 ) {
+					if (gameStart) {
+						accuracy += 1;
+					}
+
 					if ( INTERSECTED != intersects[ 0 ].object ) {
 						if ( INTERSECTED && INTERSECTED.material.emissive != null ) 	
 							INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
@@ -282,7 +294,7 @@
 						INTERSECTED = intersects[ 0 ].object;
 						for (var i = 0; i < objects.length; i++) {
 							if (endCube.cube.position.y == INTERSECTED.position.y && !gameOver && gameStart) {
-								info.innerHTML = 'Scale: Level 3 - Cleared'.fontsize(fontsize);
+								info.innerHTML = 'Track: Level 2 - Cleared'.fontsize(fontsize);
 								levelCleared();
 							}
 
@@ -301,13 +313,21 @@
 				else {
 					// If the player is off the court, the game ends.
 					if (gameStart) {
-						console.log("Not valid, game ends");
-						gameOver = true;
-						info.innerHTML = "Scale: Level 3 - Failed".fontsize(fontsize);
+						//console.log("Not valid, game ends");
+						//gameOver = true;
+						info.innerHTML = "Track: Level 2".fontsize(fontsize);
 					}		
 					if ( INTERSECTED && INTERSECTED.material.emissive != null ) 
 						INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
 					INTERSECTED = null;
+				}
+			}
+
+			function updateAccuracy() {
+				if (gameStart) {
+					maxAccuracy += 1;
+					accText = 'Accuracy: ' + (((accuracy + 1) / maxAccuracy) * 100).toFixed(2).toString() + '%';
+					accInfo.innerHTML = accText.fontsize(fontsize);;
 				}
 			}
 
@@ -402,18 +422,6 @@
 				directionalLight.position.set(Math.sin(timeDiff),0.1,Math.cos(timeDiff))
 			}
 
-			// Function for scaling objects in the level
-			function scaleObjects() {
-				for (var i = 0; i < objects.length; i++) {
-					objects[i].cube.scale.x += scaleStep * objects[i].scaleDir;
-					objects[i].cube.scale.y += scaleStep * objects[i].scaleDir;
-					objects[i].cube.scale.z += scaleStep * objects[i].scaleDir;
-					if (objects[i].cube.scale.x >= scaleMax) objects[i].scaleDir *= -1;
-					if (objects[i].cube.scale.x <= scaleMin) objects[i].scaleDir *= -1;
-				}
-
-			}
-
 			// Level failed, restart
 			function levelFailed() {
 				// Fail level condition
@@ -425,18 +433,17 @@
 					objects[i].triggered = false;
 				}
 				// Move to the next level.
-				window.location.href = './level4.html';
+				window.location.href = './level3-accuracy.html';
 			}
 
 			// Animate, Running 60 FPS at the moment.
 			function animate() {
 				requestAnimationFrame( animate );
-				//checkObjectInFOV();
+				checkObjectInFOV();
 				//rotateObjects();
+				//outlineObject();
 				rotateLight();
-				scaleObjects();
-				outlineObject();
-
+				updateAccuracy();
 				// Lose Condition, drop the objects if the player loses and make them reload the game.
 				if (gameOver) {
 					for (var i = 0; i < objects.length; i++ ) {
@@ -450,12 +457,12 @@
 
 			// Render objects to the scene.
 			function render() {
-				theta += 0.3;
+				theta += 0.8;
 
-				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				// camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) )+zOffset;
-				camera.lookAt( new THREE.Vector3(0,0,zOffset) );
+				// camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+				camera.lookAt( scene.position );
 				raycastFromMouse();
 				renderer.render( scene, camera );
 			}
