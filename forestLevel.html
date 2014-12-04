@@ -121,11 +121,27 @@
 					texture.needsUpdate = true;
 
 				} );
-                
-                var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
-                var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+                //skybox
+                var skyTexture = new THREE.ImageUtils.loadTexture( 'textures/star.jpg' );
+                skyTexture.wrapS = skyTexture.wrapT = THREE.RepeatWrapping; 
+                skyTexture.repeat.set( 1, 1 );
+                var skyBoxGeometry = new THREE.CubeGeometry( 80, 50, 60 );
+                // BackSide: render faces from inside of the cube, instead of from outside (default).
+                var skyBoxMaterial = new THREE.MeshBasicMaterial( { map: skyTexture, side: THREE.BackSide } );
                 var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
                 scene.add(skyBox);
+                
+                //floor
+                var floorTexture = new THREE.ImageUtils.loadTexture( 'textures/snow.jpg' );
+                floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+                floorTexture.repeat.set( 1, 1 );
+                // DoubleSide: render texture on both sides of mesh
+                var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+                var floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 50);
+                var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.position.y = -3;
+                floor.rotation.x = Math.PI / 2;
+                scene.add(floor);
 
 				// model
 				var loader = new THREE.OBJLoader( manager );
@@ -140,22 +156,32 @@
 						}
 
 					} );
-var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
+                    object.position.x = -16;
+					object.position.y = -2.5;
+                    object.rotation.x =  object.rotation.z = 0;
                     object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
+					object.position.z = -15;
+					object.scale.x = object.scale.y = object.scale.z = 7;
+					this.scene.add( object );
+                    
+				}, onProgress, onError );
+                loader.load( 'obj/tree/tree.obj', function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child instanceof THREE.Mesh ) {
+
+							child.material.map = texture;
+
+						}
+
+					} );
+                    object.position.x = -6;
+					object.position.y = -2.5;
+                    object.rotation.x =  object.rotation.z = 0;
+                    object.rotation.y =  Math.random()*180;
+					object.position.z = -15;
+					object.scale.x = object.scale.y = object.scale.z = 7;
 					this.scene.add( object );
                     
 				}, onProgress, onError );
@@ -171,82 +197,12 @@ var test = Math.random()*140;
 
 					} );
 
-var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
+                    object.position.x = 2;
+					object.position.y = -2.5;
+                    object.rotation.x =  object.rotation.z = 0;
                     object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
-					this.scene.add( object );
-                    
-				}, onProgress, onError );
-                loader.load( 'obj/tree/tree.obj', function ( object ) {
-
-					object.traverse( function ( child ) {
-
-						if ( child instanceof THREE.Mesh ) {
-
-							child.material.map = texture;
-
-						}
-
-					} );
-var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
-                    object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
-					this.scene.add( object );
-                    
-				}, onProgress, onError );
-                loader.load( 'obj/tree/tree.obj', function ( object ) {
-
-					object.traverse( function ( child ) {
-
-						if ( child instanceof THREE.Mesh ) {
-
-							child.material.map = texture;
-
-						}
-
-					} );
-var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
-                    object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
+					object.position.z = -15;
+					object.scale.x = object.scale.y = object.scale.z = 7;
 					this.scene.add( object );
                     
 				}, onProgress, onError );
@@ -262,22 +218,12 @@ var test = Math.random()*140;
 
 					} );
 
-					var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
+                    object.position.x = 9;
+					object.position.y = -2.5;
+                    object.rotation.x =  object.rotation.z = 0;
                     object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
+					object.position.z = -15;
+					object.scale.x = object.scale.y = object.scale.z = 7;
 					this.scene.add( object );
                     
 				}, onProgress, onError );
@@ -292,22 +238,13 @@ var test = Math.random()*140;
 						}
 
 					} );
-                    var test = Math.random()*140;
-                    var test2 = Math.random()*10;
-                    if(test2 > 5){
-                        test *=-1;
-                    }
-                    object.position.x = test;
-                    var test3 = Math.random()*50;
-                    var test4 = Math.random()*10;
-                    if(test4 > 5){
-                        test3 *=-1;
-                    }
-					object.position.y = test3;
-                    object.rotation.x = 90;
+
+                    object.position.x = 17;
+					object.position.y = -2.5;
+                    object.rotation.x =  object.rotation.z = 0;
                     object.rotation.y =  Math.random()*180;
-					object.position.z = -90;
-					object.scale.x = object.scale.y = object.scale.z = 20;
+					object.position.z = -15;
+					object.scale.x = object.scale.y = object.scale.z = 7;
 					this.scene.add( object );
                     
 				}, onProgress, onError );
@@ -315,6 +252,10 @@ var test = Math.random()*140;
 
                 
                 //end obj
+                
+                
+                
+    
 				loadLevel();
 				console.log("Number of objects saved in scene: " + objects.length);
 
@@ -343,7 +284,7 @@ var test = Math.random()*140;
 				// Initilaize Start Square
 				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
 				startCube.cube.position.x = 140;
-				startCube.cube.position.y = -60;
+				startCube.cube.position.y = -50;
 				startCube.cube.position.z = zOffset;
 
 				startCube.cube.scale.x = 0.5;
@@ -354,7 +295,7 @@ var test = Math.random()*140;
 				// Initialize End Square
 				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
 				endCube.cube.position.x = -140;
-				endCube.cube.position.y = 60;
+				endCube.cube.position.y = 50;
 				endCube.cube.position.z = zOffset;
 
 				endCube.cube.scale.x = 0.5;
