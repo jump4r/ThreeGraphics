@@ -24,8 +24,8 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
-			var scaleStep = 0.05;
-			var scaleMax = 3;
+			var scaleStep = 0.04;
+			var scaleMax = 2;
 			var scaleMin = 0.5;
 
 			// Declare Start and End Cubes
@@ -62,6 +62,10 @@
 			var gameStart = false;
 			var gameOver = false;
 
+			var firstTime = (new Date()).getTime();
+			var directionalLight;
+			var skybox;
+
 			init();
 			animate();
 
@@ -87,9 +91,12 @@
 
 				scene = new THREE.Scene();
 
-				var light = new THREE.DirectionalLight( 0xffffff, 1 );
-				light.position.set( 1, 1, 1 ).normalize();
-				scene.add( light );
+				directionalLight = new THREE.DirectionalLight(0xffffff,0.75);
+      			directionalLight.position.set(0,0,1);
+      			scene.add(directionalLight);
+
+      			var ambientLight = new THREE.AmbientLight(0x222222);
+      			scene.add(ambientLight);
                
 				loadLevel();
 				console.log("Number of objects saved in scene: " + objects.length);
@@ -114,8 +121,26 @@
 				var geometry = new THREE.BoxGeometry( 15, 15, 15);
 				var levelSide = [-1, 1];
 
+				var startMat = new THREE.MeshPhongMaterial({
+					// light
+					specular: '#ea6680',
+					// intermediate
+					color: '#dd0000',
+					// dark
+					emissive: '#840000',
+					shininess: 100});
+
+				var endMat = new THREE.MeshPhongMaterial({
+					// light
+					specular: '#7f7fee',
+					// intermediate
+					color: '#0000dd',
+					// dark
+					emissive: '#000084',
+					shininess: 100});
+
 				// Initilaize Start Square
-				startCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xdd0000 } ) );
+				startCube.cube = new THREE.Mesh( geometry,startMat );
 				startCube.cube.position.x = 0;
 				startCube.cube.position.y = -60;
 				startCube.cube.position.z = zOffset;
@@ -127,7 +152,7 @@
 				raycastTargets.push(startCube.cube);
 
 				// Initialize End Square
-				endCube.cube = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0x0000dd } ) );
+				endCube.cube = new THREE.Mesh( geometry, endMat );
 				endCube.cube.position.x = 0;
 				endCube.cube.position.y = 60;
 				endCube.cube.position.z = zOffset;
@@ -141,11 +166,13 @@
 				outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.BackSide } );
 			    outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
-			    scene.add(outlineMesh);
+			    // scene.add(outlineMesh);
 
 				for ( var i = 0; i < 11; i ++ ) {
+					var curColor = Math.random() *0xffffff;
+					var eColor = Math.max(0x111111, curColor*0.1);
 
-					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+					var object = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: curColor, emissive: eColor } ) );
 
 					object.position.x = Math.random() * 100 - 50;
 					object.position.y = Math.random() * 100 - 50;
@@ -175,6 +202,39 @@
 					//console.log("Objects' index is " + objects[i].index);
 
 				}
+
+				// SKYBOX //
+				var urls = [
+				  'cubemap/milkyway_px.png',
+				  'cubemap/milkyway_nx.png',
+				  'cubemap/milkyway_py.png',
+				  'cubemap/milkyway_ny.png',
+				  'cubemap/milkyway_pz.png',
+				  'cubemap/milkyway_nz.png'
+				];
+
+				var cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
+				cubemap.format = THREE.RGBFormat;
+
+				var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
+				shader.uniforms['tCube'].value = cubemap; // apply textures to shader
+
+				// create shader material
+				var skyBoxMaterial = new THREE.ShaderMaterial( {
+				  fragmentShader: shader.fragmentShader,
+				  vertexShader: shader.vertexShader,
+				  uniforms: shader.uniforms,
+				  depthWrite: false,
+				  side: THREE.BackSide
+				});
+
+				// create skybox mesh
+				skybox = new THREE.Mesh(
+				  new THREE.BoxGeometry(1000, 1000, 1000),
+				  skyBoxMaterial
+				);
+
+				scene.add(skybox);
 			}
 
 			// Window manager for Window Resizing.
@@ -335,6 +395,13 @@
 				}
 			}
 
+			function rotateLight()
+			{
+				var time = (new Date()).getTime();
+        		var timeDiff = ((time - firstTime)*2*Math.PI/1000)*0.10;
+				directionalLight.position.set(Math.sin(timeDiff),0.1,Math.cos(timeDiff))
+			}
+
 			// Function for scaling objects in the level
 			function scaleObjects() {
 				for (var i = 0; i < objects.length; i++) {
@@ -366,6 +433,7 @@
 				requestAnimationFrame( animate );
 				//checkObjectInFOV();
 				//rotateObjects();
+				rotateLight();
 				scaleObjects();
 				outlineObject();
 
@@ -382,12 +450,12 @@
 
 			// Render objects to the scene.
 			function render() {
-				theta += 0.1;
+				theta += 0.3;
 
-				//camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+				camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
 				//camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
-				//camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
-				camera.lookAt( scene.position );
+				camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) )+zOffset;
+				camera.lookAt( new THREE.Vector3(0,0,zOffset) );
 				raycastFromMouse();
 				renderer.render( scene, camera );
 			}
