@@ -143,12 +143,12 @@
 			    outlineMesh.position.x = outlineMesh.position.y = 100;
 			    scene.add(outlineMesh);
 
-				for ( var i = 0; i < 14; i ++ ) {
+				for ( var i = 0; i < 11; i ++ ) {
 
 					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-					object.position.x = Math.random() * 150 - 75;
-					object.position.y = Math.random() * 150 - 75;
+					object.position.x = Math.random() * 100 - 50;
+					object.position.y = Math.random() * 100 - 50;
 					object.position.z = Math.random() * 10 + zOffset;
 
 					object.rotation.x = Math.random() * 2 * Math.PI;
